@@ -1,20 +1,21 @@
 package com.zincstate.playmatics.data.local.dao
 
-import androidx.room3.Dao
-import androidx.room3.Insert
-import androidx.room3.OnConflictStrategy
-import androidx.room3.Query
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
 import com.zincstate.playmatics.data.local.entity.StatsEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@JvmSuppressWildcards
 interface StatsDao {
 
     @Query("SELECT * FROM stats WHERE id = 1")
     fun getStats(): Flow<StatsEntity?>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertDefault(stats: StatsEntity = StatsEntity())
+    suspend fun insertDefault(stats: StatsEntity = StatsEntity()): Long
 
     @Query("""
         UPDATE stats SET 
@@ -33,7 +34,7 @@ interface StatsDao {
             END
         WHERE id = 1
     """)
-    suspend fun recordCompletion(difficulty: String, timeMs: Long)
+    suspend fun recordCompletion(difficulty: String, timeMs: Long): Int
 
     @Query("""
         UPDATE stats SET 
@@ -47,5 +48,5 @@ interface StatsDao {
             END
         WHERE id = 1
     """)
-    suspend fun recordMultiplayerResult(won: Boolean)
+    suspend fun recordMultiplayerResult(won: Boolean): Int
 }

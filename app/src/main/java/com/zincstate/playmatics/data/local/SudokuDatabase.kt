@@ -1,8 +1,8 @@
 package com.zincstate.playmatics.data.local
 
-import androidx.room3.Database
-import androidx.room3.RoomDatabase
-import androidx.room3.TypeConverters
+import androidx.room.Database
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.zincstate.playmatics.data.local.converter.Converters
 import com.zincstate.playmatics.data.local.dao.PuzzleDao
 import com.zincstate.playmatics.data.local.dao.SettingsDao

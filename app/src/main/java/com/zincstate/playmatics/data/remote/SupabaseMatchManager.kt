@@ -6,15 +6,16 @@ import com.zincstate.playmatics.data.remote.dto.PlayerPresence
 import com.zincstate.playmatics.data.remote.dto.ProgressEvent
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.builtin.Anonymous
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.broadcastFlow
+import io.github.jan.supabase.realtime.broadcast.BroadcastPayload
+import io.github.jan.supabase.realtime.presenceDataFlow
 import io.github.jan.supabase.realtime.channel
-import io.github.jan.supabase.realtime.presence.presenceChangeFlow
-import io.github.jan.supabase.realtime.presence.track
 import io.github.jan.supabase.realtime.realtime
+import kotlinx.serialization.json.jsonObject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -48,7 +49,7 @@ class SupabaseMatchManager @Inject constructor(
             currentUserId = session.user?.id ?: ""
             return currentUserId!!
         }
-        supabase.auth.signInWith(Anonymous)
+        supabase.auth.signInAnonymously()
         val userId = supabase.auth.currentUserOrNull()?.id ?: ""
         currentUserId = userId
         return userId
@@ -158,9 +159,8 @@ class SupabaseMatchManager @Inject constructor(
 
     /** Track own presence in the channel. */
     suspend fun trackPresence(userId: String, displayName: String) {
-        currentChannel?.presence?.track(
-            PlayerPresence(userId = userId, displayName = displayName)
-        )
+        val presenceJson = kotlinx.serialization.json.Json.encodeToJsonElement(PlayerPresence.serializer(), PlayerPresence(userId = userId, displayName = displayName)).jsonObject
+        currentChannel?.track(presenceJson)
     }
 
     /** Leave and clean up the Realtime channel. */
@@ -179,28 +179,36 @@ class SupabaseMatchManager @Inject constructor(
 
     /** Send own progress to the opponent. */
     suspend fun sendProgress(playerId: String, solvedCount: Int) {
+        val payloadJson = kotlinx.serialization.json.Json.encodeToJsonElement(ProgressEvent.serializer(), ProgressEvent(playerId = playerId, solvedCount = solvedCount))
         currentChannel?.broadcast(
             event = "progress",
-            data = ProgressEvent(playerId = playerId, solvedCount = solvedCount)
+            payload = BroadcastPayload.Json(payloadJson)
         )
     }
 
     /** Send forfeit notification. */
     suspend fun sendForfeitBroadcast(playerId: String) {
+        val payloadJson = kotlinx.serialization.json.Json.encodeToJsonElement(ForfeitEvent.serializer(), ForfeitEvent(playerId = playerId))
         currentChannel?.broadcast(
             event = "forfeit",
-            data = ForfeitEvent(playerId = playerId)
+            payload = BroadcastPayload.Json(payloadJson)
         )
     }
 
     /** Observe opponent progress events. */
     fun observeProgress(): Flow<ProgressEvent>? {
-        return currentChannel?.broadcastFlow<ProgressEvent>(event = "progress")
+        return currentChannel?.broadcastFlow("progress")?.mapNotNull {
+            val jsonPayload = it.payload as? BroadcastPayload.Json ?: return@mapNotNull null
+            try { kotlinx.serialization.json.Json.decodeFromJsonElement(ProgressEvent.serializer(), jsonPayload.value) } catch (e: Exception) { null }
+        }
     }
 
     /** Observe forfeit events. */
     fun observeForfeit(): Flow<ForfeitEvent>? {
-        return currentChannel?.broadcastFlow<ForfeitEvent>(event = "forfeit")
+        return currentChannel?.broadcastFlow("forfeit")?.mapNotNull {
+            val jsonPayload = it.payload as? BroadcastPayload.Json ?: return@mapNotNull null
+            try { kotlinx.serialization.json.Json.decodeFromJsonElement(ForfeitEvent.serializer(), jsonPayload.value) } catch (e: Exception) { null }
+        }
     }
 
     // ------------------------------------------------------------------ //
@@ -210,24 +218,8 @@ class SupabaseMatchManager @Inject constructor(
     /** Observe presence changes. Emits whether the opponent is currently present. */
     fun observePresenceChanges(): Flow<Boolean>? {
         val userId = currentUserId ?: return null
-        return currentChannel?.presence?.presenceChangeFlow()?.map { changes ->
-            // Check if any non-self user is present in the current state
-            val currentPresences = try {
-                currentChannel?.presence?.currentPresences
-                    ?.flatMap { (_, presences) ->
-                        presences.mapNotNull { presence ->
-                            try {
-                                kotlinx.serialization.json.Json.decodeFromJsonElement(
-                                    PlayerPresence.serializer(),
-                                    presence.state
-                                )
-                            } catch (_: Exception) { null }
-                        }
-                    } ?: emptyList()
-            } catch (_: Exception) {
-                emptyList()
-            }
-            currentPresences.any { it.userId != userId }
+        return currentChannel?.presenceDataFlow<PlayerPresence>()?.map { presences ->
+            presences.any { it.userId != userId }
         }
     }
 

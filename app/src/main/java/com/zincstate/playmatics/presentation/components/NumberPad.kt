@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.BackSpace
+import androidx.compose.material.icons.outlined.Backspace
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditOff
 import androidx.compose.material3.FilledTonalButton
@@ -120,7 +120,7 @@ fun NumberPad(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.BackSpace,
+                    imageVector = Icons.Outlined.Backspace,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp)
                 )

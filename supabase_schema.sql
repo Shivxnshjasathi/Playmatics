@@ -30,18 +30,21 @@ create index if not exists idx_matches_status_created on public.matches (status,
 alter table public.matches enable row level security;
 
 -- Anyone authenticated can see waiting rooms or their own matches
+drop policy if exists "select_matches" on public.matches;
 create policy "select_matches"
 on public.matches for select
 to authenticated
 using (status = 'waiting' or auth.uid() = host_id or auth.uid() = guest_id);
 
 -- Only the host can insert (RLS enforces host_id = auth.uid())
+drop policy if exists "insert_matches" on public.matches;
 create policy "insert_matches"
 on public.matches for insert
 to authenticated
 with check (auth.uid() = host_id);
 
 -- Host can delete their own waiting room (cancel before guest joins)
+drop policy if exists "delete_own_waiting_match" on public.matches;
 create policy "delete_own_waiting_match"
 on public.matches for delete
 to authenticated

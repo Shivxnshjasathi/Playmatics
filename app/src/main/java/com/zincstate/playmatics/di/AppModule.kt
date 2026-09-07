@@ -1,8 +1,7 @@
 package com.zincstate.playmatics.di
 
 import android.content.Context
-import androidx.room3.Room
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.room.Room
 import com.zincstate.playmatics.data.local.SudokuDatabase
 import com.zincstate.playmatics.data.local.dao.PuzzleDao
 import com.zincstate.playmatics.data.local.dao.SettingsDao
@@ -33,7 +32,6 @@ object AppModule {
             SudokuDatabase::class.java,
             "sudoku_db"
         )
-            .setDriver(BundledSQLiteDriver())
             .build()
     }
 

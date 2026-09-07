@@ -1,6 +1,6 @@
 package com.zincstate.playmatics.data.local.converter
 
-import androidx.room3.TypeConverter
+import androidx.room.TypeConverter
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
