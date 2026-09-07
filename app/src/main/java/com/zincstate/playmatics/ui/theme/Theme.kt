@@ -34,12 +34,12 @@ private val PlaymaticsLightScheme = lightColorScheme(
 )
 
 private val PlaymaticsDarkScheme = darkColorScheme(
-    primary = AccentBlueDark,
-    onPrimary = DarkSurface,
-    primaryContainer = AccentBlue,
-    onPrimaryContainer = AccentBlueDark,
-    secondary = CellUserCorrect,
-    onSecondary = DarkSurface,
+    primary = LogoGreen,
+    onPrimary = DarkBackground,
+    primaryContainer = LogoGreen.copy(alpha = 0.3f),
+    onPrimaryContainer = LogoGreen,
+    secondary = LogoGreen,
+    onSecondary = DarkBackground,
     background = DarkBackground,
     onBackground = DarkOnBackground,
     surface = DarkSurface,

@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -35,6 +36,7 @@ import com.zincstate.playmatics.ui.theme.CellHighlightSame
 import com.zincstate.playmatics.ui.theme.CellSelected
 import com.zincstate.playmatics.ui.theme.CellUserCorrect
 import com.zincstate.playmatics.ui.theme.CellUserIncorrect
+import androidx.compose.ui.draw.clip
 
 /**
  * 9×9 Sudoku board with Canvas grid lines and Composable cells.
@@ -59,6 +61,8 @@ fun SudokuBoard(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1f)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+            .border(2.5.dp, onSurface, androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
     ) {
         val boardSizePx = with(LocalDensity.current) { maxWidth.toPx() }
         val cellSizePx = boardSizePx / 9f
@@ -89,8 +93,8 @@ fun SudokuBoard(
                 }
             }
 
-            // Block borders (thick lines)
-            for (i in 0..9 step 3) {
+            // Block borders (thick lines) - only inner lines (3, 6)
+            for (i in 3..6 step 3) {
                 // Vertical
                 drawLine(
                     color = onSurface,
