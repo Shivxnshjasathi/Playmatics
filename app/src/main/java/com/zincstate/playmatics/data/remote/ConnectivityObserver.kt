@@ -44,8 +44,6 @@ class ConnectivityObserver @Inject constructor(
         ) {
             _isOnline.value = networkCapabilities.hasCapability(
                 NetworkCapabilities.NET_CAPABILITY_INTERNET
-            ) && networkCapabilities.hasCapability(
-                NetworkCapabilities.NET_CAPABILITY_VALIDATED
             )
         }
     }
@@ -60,8 +58,7 @@ class ConnectivityObserver @Inject constructor(
     private fun isCurrentlyOnline(): Boolean {
         val network = connectivityManager.activeNetwork ?: return false
         val caps = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     /** Flow-based alternative for collecting in ViewModels. */
@@ -73,10 +70,7 @@ class ConnectivityObserver @Inject constructor(
                 network: Network,
                 networkCapabilities: NetworkCapabilities
             ) {
-                trySend(
-                    networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                    networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                )
+                trySend(networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET))
             }
         }
         val request = NetworkRequest.Builder()

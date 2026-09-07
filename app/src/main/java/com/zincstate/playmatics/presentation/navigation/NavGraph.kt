@@ -18,6 +18,7 @@ import com.zincstate.playmatics.presentation.stats.StatsScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
+    connectivityObserver: com.zincstate.playmatics.data.remote.ConnectivityObserver? = null,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -41,7 +42,8 @@ fun NavGraph(
                 },
                 onSettings = {
                     navController.navigate(Settings)
-                }
+                },
+                connectivityObserver = connectivityObserver
             )
         }
 
