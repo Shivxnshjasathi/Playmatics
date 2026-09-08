@@ -32,8 +32,7 @@ class MainActivity : ComponentActivity() {
             val themeMode by settingsRepository.observeThemeMode()
                 .collectAsState(initial = null)
 
-            val musicEnabled by settingsRepository.observeMusicEnabled()
-                .collectAsState(initial = true)
+            val musicEnabled = false
             val sfxEnabled by settingsRepository.observeSfxEnabled()
                 .collectAsState(initial = true)
                 

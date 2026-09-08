@@ -184,7 +184,8 @@ fun MultiplayerMatchScreen(
                     hapticsEnabled = true,
                     onDigit = viewModel::enterDigit,
                     onErase = viewModel::eraseCell,
-                    onToggleNotes = viewModel::toggleNotesMode
+                    onToggleNotes = viewModel::toggleNotesMode,
+                    variantMetadata = state.variantMetadata
                 )
             }
         }

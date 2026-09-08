@@ -94,7 +94,12 @@ fun HomeScreen(
                         
                         // SUDOKU FAMILY
                         Text("SUDOKU FAMILY", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 28.dp, bottom = 8.dp))
-                        GameType.entries.forEach { game ->
+                        val sudokuGames = listOf(
+                            GameType.SUDOKU, GameType.KILLER_SUDOKU, GameType.DIAGONAL_SUDOKU,
+                            GameType.JIGSAW_SUDOKU, GameType.WINDOKU, GameType.CONSECUTIVE_SUDOKU,
+                            GameType.ODD_EVEN_SUDOKU, GameType.WORDOKU, GameType.SAMURAI_SUDOKU
+                        )
+                        sudokuGames.forEach { game ->
                             NavigationDrawerItem(
                                 icon = { Icon(Icons.Filled.GridOn, contentDescription = game.displayName) },
                                 label = { 
@@ -117,16 +122,24 @@ fun HomeScreen(
                         
                         // NUMBER GRIDS
                         Text("NUMBER GRIDS", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 28.dp, bottom = 8.dp))
-                        val numberGames = listOf("Kakuro", "KenKen", "Futoshiki", "Skyscrapers", "Str8ts", "Numbrix / Hidato")
+                        val numberGames = listOf(
+                            GameType.KAKURO, GameType.KENKEN, GameType.FUTOSHIKI,
+                            GameType.SKYSCRAPERS, GameType.STR8TS, GameType.NUMBRIX_HIDATO
+                        )
                         numberGames.forEach { game ->
                             NavigationDrawerItem(
-                                icon = { Icon(Icons.Filled.Numbers, contentDescription = game) },
-                                label = { Text(game, style = MaterialTheme.typography.bodyMedium) },
-                                badge = { Text("Soon", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                                selected = false,
+                                icon = { Icon(Icons.Filled.Numbers, contentDescription = game.displayName) },
+                                label = { 
+                                    Text(
+                                        text = if (activeGame == game) "${game.displayName} (Active)" else game.displayName, 
+                                        fontWeight = if (activeGame == game) FontWeight.Bold else FontWeight.Normal,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    ) 
+                                },
+                                selected = activeGame == game,
                                 onClick = { 
+                                    activeGame = game
                                     scope.launch { drawerState.close() }
-                                    onComingSoonClick(game)
                                 },
                                 modifier = Modifier.padding(horizontal = 12.dp)
                             )

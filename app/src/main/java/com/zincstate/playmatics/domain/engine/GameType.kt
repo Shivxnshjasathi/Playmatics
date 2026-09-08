@@ -56,6 +56,36 @@ enum class GameType(
         displayName = "Samurai Sudoku",
         description = "Five overlapping 9×9 grids that share corner boxes — solve them all at once.",
         key = "samurai_sudoku"
+    ),
+    KAKURO(
+        displayName = "Kakuro",
+        description = "Fill the grid with digits 1-9 so that the sum of each continuous block matches the clue.",
+        key = "kakuro"
+    ),
+    KENKEN(
+        displayName = "KenKen",
+        description = "Fill the grid with digits 1-N so that each cage's math operation matches the target.",
+        key = "kenken"
+    ),
+    FUTOSHIKI(
+        displayName = "Futoshiki",
+        description = "Fill the grid with digits 1-N while satisfying the greater-than/less-than signs.",
+        key = "futoshiki"
+    ),
+    SKYSCRAPERS(
+        displayName = "Skyscrapers",
+        description = "Place buildings of varying heights in a grid such that the clues indicate how many buildings are visible from that direction.",
+        key = "skyscrapers"
+    ),
+    STR8TS(
+        displayName = "Str8ts",
+        description = "Fill empty cells with digits 1-9 to form consecutive sets of numbers in horizontal and vertical blocks.",
+        key = "str8ts"
+    ),
+    NUMBRIX_HIDATO(
+        displayName = "Numbrix / Hidato",
+        description = "Fill the grid with consecutive numbers that connect horizontally, vertically, or diagonally.",
+        key = "numbrix_hidato"
     );
 
     companion object {

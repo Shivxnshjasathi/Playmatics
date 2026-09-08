@@ -133,7 +133,7 @@ class MultiplayerMatchViewModel @Inject constructor(
         if (current.matchResult != null) return
 
         if (current.isNotesMode) {
-            val key = row * 9 + col
+            val key = row * current.board.size + col
             val existing = current.pencilNotes[key] ?: emptySet()
             val updated = if (digit in existing) existing - digit else existing + digit
             val newNotes = current.pencilNotes.toMutableMap()
@@ -150,7 +150,7 @@ class MultiplayerMatchViewModel @Inject constructor(
             newBoard[row][col] = digit
 
             val newNotes = current.pencilNotes.toMutableMap()
-            newNotes.remove(row * 9 + col)
+            newNotes.remove(row * current.board.size + col)
 
             val conflicts = currentEngine.conflictingCells(
                 newBoard, row, col, digit, current.variantMetadata
@@ -199,7 +199,7 @@ class MultiplayerMatchViewModel @Inject constructor(
         newBoard[row][col] = 0
 
         val newNotes = current.pencilNotes.toMutableMap()
-        newNotes.remove(row * 9 + col)
+        newNotes.remove(row * current.board.size + col)
 
         val cellStates = computeCellStates(newBoard, current.givenCells, current.solution)
         val correctCount = currentEngine.countCorrectCells(newBoard, current.solution)

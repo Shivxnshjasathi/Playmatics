@@ -141,9 +141,10 @@ fun SettingsScreen(
 
             SettingToggle(
                 title = "Background Music",
-                subtitle = "Play music during the game",
-                checked = musicEnabled,
-                onCheckedChange = viewModel::setMusicEnabled
+                subtitle = "Coming soon - we're finding a good track",
+                checked = false,
+                enabled = false,
+                onCheckedChange = { }
             )
 
             SettingToggle(
@@ -212,6 +213,7 @@ private fun SettingToggle(
     title: String,
     subtitle: String,
     checked: Boolean,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) {
     Column {
@@ -239,6 +241,7 @@ private fun SettingToggle(
             }
             Switch(
                 checked = checked,
+                enabled = enabled,
                 onCheckedChange = onCheckedChange
             )
         }

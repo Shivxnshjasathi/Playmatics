@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -68,9 +69,12 @@ fun SudokuBoard(
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
             .border(2.5.dp, onSurface, androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
     ) {
+        val gridDim = board.size
+        if (gridDim == 0) return@BoxWithConstraints
+
         val boardSizePx = with(LocalDensity.current) { maxWidth.toPx() }
-        val cellSizePx = boardSizePx / 9f
-        val cellSizeDp = maxWidth / 9f
+        val cellSizePx = boardSizePx / gridDim.toFloat()
+        val cellSizeDp = maxWidth / gridDim.toFloat()
 
         // Grid lines via Canvas
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -100,43 +104,64 @@ fun SudokuBoard(
             }
 
             // Cell borders (thin lines)
-            for (i in 1 until 9) {
-                if (i % 3 != 0) {
-                    // Vertical
-                    drawLine(
-                        color = outline,
-                        start = Offset(i * cellSizePx, 0f),
-                        end = Offset(i * cellSizePx, boardSizePx),
-                        strokeWidth = thinLine
-                    )
-                    // Horizontal
-                    drawLine(
-                        color = outline,
-                        start = Offset(0f, i * cellSizePx),
-                        end = Offset(boardSizePx, i * cellSizePx),
-                        strokeWidth = thinLine
-                    )
-                }
+            for (i in 1 until gridDim) {
+                if (gridDim == 9 && variantMetadata !is VariantMetadata.JigsawRegions && variantMetadata !is VariantMetadata.KenKenCages && i % 3 == 0) continue
+
+                // Vertical
+                drawLine(
+                    color = outline,
+                    start = Offset(i * cellSizePx, 0f),
+                    end = Offset(i * cellSizePx, boardSizePx),
+                    strokeWidth = thinLine
+                )
+                // Horizontal
+                drawLine(
+                    color = outline,
+                    start = Offset(0f, i * cellSizePx),
+                    end = Offset(boardSizePx, i * cellSizePx),
+                    strokeWidth = thinLine
+                )
             }
 
-            // Block borders (thick lines) - only if not jigsaw
-            if (variantMetadata !is VariantMetadata.JigsawRegions) {
+            // Block borders (thick lines)
+            if (gridDim == 9 && variantMetadata !is VariantMetadata.JigsawRegions && variantMetadata !is VariantMetadata.KenKenCages) {
                 for (i in 3..6 step 3) {
                     drawLine(onSurface, Offset(i * cellSizePx, 0f), Offset(i * cellSizePx, boardSizePx), strokeWidth = thickLine)
                     drawLine(onSurface, Offset(0f, i * cellSizePx), Offset(boardSizePx, i * cellSizePx), strokeWidth = thickLine)
                 }
-            } else {
+            } else if (variantMetadata is VariantMetadata.JigsawRegions) {
                 // Jigsaw thick borders
-                for (r in 0 until 9) {
-                    for (c in 0 until 9) {
+                for (r in 0 until gridDim) {
+                    for (c in 0 until gridDim) {
                         val region = variantMetadata.regionMap[r][c]
                         val x = c * cellSizePx
                         val y = r * cellSizePx
-                        if (c < 8 && variantMetadata.regionMap[r][c + 1] != region) {
+                        if (c < gridDim - 1 && variantMetadata.regionMap[r][c + 1] != region) {
                             drawLine(onSurface, Offset(x + cellSizePx, y), Offset(x + cellSizePx, y + cellSizePx), strokeWidth = thickLine)
                         }
-                        if (r < 8 && variantMetadata.regionMap[r + 1][c] != region) {
+                        if (r < gridDim - 1 && variantMetadata.regionMap[r + 1][c] != region) {
                             drawLine(onSurface, Offset(x, y + cellSizePx), Offset(x + cellSizePx, y + cellSizePx), strokeWidth = thickLine)
+                        }
+                    }
+                }
+            } else if (variantMetadata is VariantMetadata.KenKenCages) {
+                for (cage in variantMetadata.cages) {
+                    for (cell in cage.cells) {
+                        val r = cell.first
+                        val c = cell.second
+                        val x = c * cellSizePx
+                        val y = r * cellSizePx
+                        if (Pair(r, c + 1) !in cage.cells) {
+                            drawLine(onSurface, Offset(x + cellSizePx, y), Offset(x + cellSizePx, y + cellSizePx), strokeWidth = thickLine)
+                        }
+                        if (Pair(r + 1, c) !in cage.cells) {
+                            drawLine(onSurface, Offset(x, y + cellSizePx), Offset(x + cellSizePx, y + cellSizePx), strokeWidth = thickLine)
+                        }
+                        if (Pair(r, c - 1) !in cage.cells) {
+                            drawLine(onSurface, Offset(x, y), Offset(x, y + cellSizePx), strokeWidth = thickLine)
+                        }
+                        if (Pair(r - 1, c) !in cage.cells) {
+                            drawLine(onSurface, Offset(x, y), Offset(x + cellSizePx, y), strokeWidth = thickLine)
                         }
                     }
                 }
@@ -144,8 +169,8 @@ fun SudokuBoard(
         }
 
         // Cells
-        for (row in 0 until 9) {
-            for (col in 0 until 9) {
+        for (row in 0 until gridDim) {
+            for (col in 0 until gridDim) {
                 val value = board[row][col]
                 val state = cellStates[row][col]
                 val isSelected = selectedCell == row to col
@@ -155,9 +180,9 @@ fun SudokuBoard(
                         value == board[selectedCell.first][selectedCell.second] &&
                         !isSelected
                 val isSameRowColBox = selectedCell != null && !isSelected && (
-                        row == selectedCell.first ||
-                                col == selectedCell.second ||
-                                (row / 3 == selectedCell.first / 3 && col / 3 == selectedCell.second / 3)
+                        row == selectedCell.first || col == selectedCell.second ||
+                        (gridDim == 9 && variantMetadata !is VariantMetadata.JigsawRegions && variantMetadata !is VariantMetadata.KenKenCages &&
+                                (row / 3 == selectedCell.first / 3 && col / 3 == selectedCell.second / 3))
                         )
 
                 val bgColor by animateColorAsState(
@@ -200,6 +225,21 @@ fun SudokuBoard(
                         },
                     contentAlignment = Alignment.Center
                 ) {
+                    if (variantMetadata is VariantMetadata.KenKenCages) {
+                        val cage = variantMetadata.cages.find { row to col in it.cells }
+                        if (cage != null) {
+                            val topLeftCell = cage.cells.minWithOrNull(compareBy({ it.first }, { it.second }))
+                            if (topLeftCell == row to col) {
+                                Text(
+                                    text = "${cage.target}${cage.operator}",
+                                    color = onSurface,
+                                    fontSize = (cellSizeDp.value * 0.25f).sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.align(Alignment.TopStart).padding(start = 2.dp, top = 2.dp)
+                                )
+                            }
+                        }
+                    }
                     // Odd/Even overlays
                     if (variantMetadata is VariantMetadata.OddEvenMap) {
                         val isOdd = variantMetadata.parityMap[row][col]

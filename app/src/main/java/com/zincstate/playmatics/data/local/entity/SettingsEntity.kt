@@ -11,6 +11,6 @@ data class SettingsEntity(
     val isDarkTheme: Boolean? = null,
     val haptics: Boolean = true,
     val highlightMistakes: Boolean = true,
-    val musicEnabled: Boolean = true,
+    val musicEnabled: Boolean = false,
     val sfxEnabled: Boolean = true
 )

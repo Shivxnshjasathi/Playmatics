@@ -41,7 +41,8 @@ fun NumberPad(
     onDigit: (Int) -> Unit,
     onErase: () -> Unit,
     onToggleNotes: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    variantMetadata: com.zincstate.playmatics.domain.engine.VariantMetadata? = null
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -122,8 +123,13 @@ fun NumberPad(
                             onDigit(digit)
                         }
                 ) {
+                    val displayStr = if (variantMetadata is com.zincstate.playmatics.domain.engine.VariantMetadata.WordokuMapping) {
+                        variantMetadata.letterMap[digit]?.toString() ?: digit.toString()
+                    } else {
+                        digit.toString()
+                    }
                     Text(
-                        text = digit.toString(),
+                        text = displayStr,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = if (disabled) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurfaceVariant

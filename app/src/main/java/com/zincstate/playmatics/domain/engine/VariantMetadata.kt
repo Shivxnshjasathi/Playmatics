@@ -17,6 +17,36 @@ sealed class VariantMetadata {
 
     data class KillerCages(val cages: List<CageDef>) : VariantMetadata()
 
+    // ── KenKen ───────────────────────────────────────────────────────
+    /** A cage: a group of cells with a target value and an operator (+, -, *, /) or "" for single cells. */
+    data class KenKenCageDef(
+        val cells: List<Pair<Int, Int>>,
+        val target: Int,
+        val operator: String
+    )
+    
+    data class KenKenCages(val cages: List<KenKenCageDef>) : VariantMetadata()
+
+    // ── Futoshiki ────────────────────────────────────────────────────
+    /** 
+     * Inequalities between cells. 
+     * horizontal[r][c] is relation between (r,c) and (r,c+1): 1 means (r,c) > (r,c+1), -1 means <, 0 means none.
+     * vertical[r][c] is relation between (r,c) and (r+1,c): 1 means (r,c) > (r+1,c), -1 means <, 0 means none.
+     */
+    data class FutoshikiInequalities(
+        val horizontal: Array<IntArray>,
+        val vertical: Array<IntArray>
+    ) : VariantMetadata()
+
+    // ── Skyscrapers ──────────────────────────────────────────────────
+    /** Clues on the perimeter of the board indicating how many "skyscrapers" can be seen from that angle. */
+    data class SkyscraperClues(
+        val top: IntArray,
+        val bottom: IntArray,
+        val left: IntArray,
+        val right: IntArray
+    ) : VariantMetadata()
+
     // ── Jigsaw Sudoku ────────────────────────────────────────────────
     /** regionMap[r][c] = region ID (0–8) for that cell. */
     data class JigsawRegions(val regionMap: Array<IntArray>) : VariantMetadata() {

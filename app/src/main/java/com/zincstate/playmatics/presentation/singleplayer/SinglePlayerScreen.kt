@@ -162,7 +162,8 @@ fun SinglePlayerScreen(
                     hapticsEnabled = hapticsEnabled,
                     onDigit = viewModel::enterDigit,
                     onErase = viewModel::eraseCell,
-                    onToggleNotes = viewModel::toggleNotesMode
+                    onToggleNotes = viewModel::toggleNotesMode,
+                    variantMetadata = state.variantMetadata
                 )
             }
         }

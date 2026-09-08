@@ -17,5 +17,11 @@ object EngineFactory {
         GameType.ODD_EVEN_SUDOKU -> OddEvenSudokuEngine
         GameType.WORDOKU -> WordokuEngine
         GameType.SAMURAI_SUDOKU -> SamuraiSudokuEngine
+        GameType.KAKURO -> KakuroEngine
+        GameType.KENKEN -> KenKenEngine
+        GameType.FUTOSHIKI -> FutoshikiEngine
+        GameType.SKYSCRAPERS -> SkyscrapersEngine
+        GameType.STR8TS -> Str8tsEngine
+        GameType.NUMBRIX_HIDATO -> NumbrixHidatoEngine
     }
 }

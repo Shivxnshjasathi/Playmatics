@@ -119,7 +119,7 @@ class SinglePlayerViewModel @Inject constructor(
 
         if (current.isNotesMode) {
             // Toggle pencil note
-            val key = row * 9 + col
+            val key = row * current.board.size + col
             val existingNotes = current.pencilNotes[key] ?: emptySet()
             val newNotes = if (digit in existingNotes) existingNotes - digit else existingNotes + digit
             val updatedPencilNotes = current.pencilNotes.toMutableMap()
@@ -139,7 +139,7 @@ class SinglePlayerViewModel @Inject constructor(
 
             // Clear pencil note for this cell
             val updatedNotes = current.pencilNotes.toMutableMap()
-            updatedNotes.remove(row * 9 + col)
+            updatedNotes.remove(row * current.board.size + col)
 
             val conflicts = currentEngine.conflictingCells(
                 newBoard, row, col, digit, current.variantMetadata
@@ -184,7 +184,7 @@ class SinglePlayerViewModel @Inject constructor(
 
         // Also clear pencil notes
         val updatedNotes = current.pencilNotes.toMutableMap()
-        updatedNotes.remove(row * 9 + col)
+        updatedNotes.remove(row * current.board.size + col)
 
         val cellStates = computeCellStates(newBoard, current.givenCells, current.solution)
         val correctCount = currentEngine.countCorrectCells(newBoard, current.solution)
@@ -309,10 +309,11 @@ class SinglePlayerViewModel @Inject constructor(
         }
 
         fun boardFromString(s: String): Array<IntArray> {
-            require(s.length == 81) { "Board string must be 81 chars, got ${s.length}" }
-            return Array(9) { r ->
-                IntArray(9) { c ->
-                    s[r * 9 + c].digitToInt()
+            val size = kotlin.math.sqrt(s.length.toDouble()).toInt()
+            require(size * size == s.length) { "Board string length must be a perfect square, got ${s.length}" }
+            return Array(size) { r ->
+                IntArray(size) { c ->
+                    s[r * size + c].digitToInt()
                 }
             }
         }
