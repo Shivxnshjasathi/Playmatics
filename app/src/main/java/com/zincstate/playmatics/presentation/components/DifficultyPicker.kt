@@ -20,13 +20,13 @@ fun DifficultyPicker(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Difficulty.entries.forEach { difficulty ->
             FilterChip(
                 selected = selected == difficulty,
                 onClick = { onSelect(difficulty) },
-                label = { Text(difficulty.name) },
+                label = { Text(difficulty.name, maxLines = 1, softWrap = false) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primary,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary

@@ -11,6 +11,9 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.FontDownload
+import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Functions
 import androidx.compose.material.icons.filled.Flag
@@ -92,16 +95,23 @@ fun HomeScreen(
                             modifier = Modifier.padding(horizontal = 28.dp, vertical = 24.dp)
                         )
                         
-                        // SUDOKU FAMILY
-                        Text("SUDOKU FAMILY", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 28.dp, bottom = 8.dp))
-                        val sudokuGames = listOf(
-                            GameType.SUDOKU, GameType.KILLER_SUDOKU, GameType.DIAGONAL_SUDOKU,
-                            GameType.JIGSAW_SUDOKU, GameType.WINDOKU, GameType.CONSECUTIVE_SUDOKU,
-                            GameType.ODD_EVEN_SUDOKU, GameType.WORDOKU, GameType.SAMURAI_SUDOKU
+                        // ALL GAMES
+                        Text("ALL GAMES", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 28.dp, bottom = 8.dp))
+                        val allGames = listOf(
+                            GameType.SUDOKU, GameType.WORDOKU, GameType.KENKEN, GameType.CROSSWORD, GameType.WORD_SEARCH
                         )
-                        sudokuGames.forEach { game ->
+                        allGames.forEach { game ->
                             NavigationDrawerItem(
-                                icon = { Icon(Icons.Filled.GridOn, contentDescription = game.displayName) },
+                                icon = {
+
+                                val gameIcon = when (game) {
+                                    GameType.KENKEN -> Icons.Filled.Functions
+                                    GameType.WORDOKU -> Icons.Filled.Star
+                                    else -> Icons.Filled.GridOn
+                                }
+                                Icon(gameIcon, contentDescription = game.displayName)
+
+                                },
                                 label = { 
                                     Text(
                                         text = if (activeGame == game) "${game.displayName} (Active)" else game.displayName, 
@@ -118,89 +128,6 @@ fun HomeScreen(
                             )
                         }
 
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp))
-                        
-                        // NUMBER GRIDS
-                        Text("NUMBER GRIDS", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 28.dp, bottom = 8.dp))
-                        val numberGames = listOf(
-                            GameType.KAKURO, GameType.KENKEN, GameType.FUTOSHIKI,
-                            GameType.SKYSCRAPERS, GameType.STR8TS, GameType.NUMBRIX_HIDATO
-                        )
-                        numberGames.forEach { game ->
-                            NavigationDrawerItem(
-                                icon = { Icon(Icons.Filled.Numbers, contentDescription = game.displayName) },
-                                label = { 
-                                    Text(
-                                        text = if (activeGame == game) "${game.displayName} (Active)" else game.displayName, 
-                                        fontWeight = if (activeGame == game) FontWeight.Bold else FontWeight.Normal,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    ) 
-                                },
-                                selected = activeGame == game,
-                                onClick = { 
-                                    activeGame = game
-                                    scope.launch { drawerState.close() }
-                                },
-                                modifier = Modifier.padding(horizontal = 12.dp)
-                            )
-                        }
-
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp))
-
-                        // DRAWING PUZZLES
-                        Text("DRAWING PUZZLES", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 28.dp, bottom = 8.dp))
-                        val drawingGames = listOf("Nonograms (Picross)", "Slitherlink", "Nurikabe", "Hashiwokakero", "Masyu", "Light Up (Akari)", "Tents and Trees", "Shikaku", "Fillomino")
-                        drawingGames.forEach { game ->
-                            NavigationDrawerItem(
-                                icon = { Icon(Icons.Filled.Create, contentDescription = game) },
-                                label = { Text(game, style = MaterialTheme.typography.bodyMedium) },
-                                badge = { Text("Soon", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                                selected = false,
-                                onClick = { 
-                                    scope.launch { drawerState.close() }
-                                    onComingSoonClick(game)
-                                },
-                                modifier = Modifier.padding(horizontal = 12.dp)
-                            )
-                        }
-
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp))
-
-                        // WORD GAMES
-                        Text("WORD GAMES", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 28.dp, bottom = 8.dp))
-                        val wordGames = listOf("Word Search", "Mini Crossword", "Boggle", "Anagram Scramble", "Wordle Daily")
-                        wordGames.forEach { game ->
-                            NavigationDrawerItem(
-                                icon = { Icon(Icons.Filled.Abc, contentDescription = game) },
-                                label = { Text(game, style = MaterialTheme.typography.bodyMedium) },
-                                badge = { Text("Soon", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                                selected = false,
-                                onClick = { 
-                                    scope.launch { drawerState.close() }
-                                    onComingSoonClick(game)
-                                },
-                                modifier = Modifier.padding(horizontal = 12.dp)
-                            )
-                        }
-
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp))
-
-                        // CLASSIC MINIGAMES
-                        Text("CLASSIC MINIGAMES", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 28.dp, bottom = 8.dp))
-                        val minigames = listOf("Minesweeper", "2048", "Lights Out", "Memory Match", "Peg Solitaire")
-                        minigames.forEach { game ->
-                            NavigationDrawerItem(
-                                icon = { Icon(Icons.Filled.Gamepad, contentDescription = game) },
-                                label = { Text(game, style = MaterialTheme.typography.bodyMedium) },
-                                badge = { Text("Soon", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                                selected = false,
-                                onClick = { 
-                                    scope.launch { drawerState.close() }
-                                    onComingSoonClick(game)
-                                },
-                                modifier = Modifier.padding(horizontal = 12.dp)
-                            )
-                        }
                     }
 
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))

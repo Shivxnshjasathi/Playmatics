@@ -1,27 +1,18 @@
 package com.zincstate.playmatics.domain.engine
 
-import com.zincstate.playmatics.domain.engine.variants.*
+import com.zincstate.playmatics.domain.engine.variants.CrosswordEngine
+import com.zincstate.playmatics.domain.engine.variants.KenKenEngine
+import com.zincstate.playmatics.domain.engine.variants.WordSearchEngine
+import com.zincstate.playmatics.domain.engine.variants.WordokuEngine
 
-/**
- * Factory that maps a [GameType] to its corresponding [PuzzleEngine].
- */
 object EngineFactory {
-
-    fun getEngine(gameType: GameType): PuzzleEngine = when (gameType) {
-        GameType.SUDOKU -> SudokuEngine
-        GameType.KILLER_SUDOKU -> KillerSudokuEngine
-        GameType.DIAGONAL_SUDOKU -> DiagonalSudokuEngine
-        GameType.JIGSAW_SUDOKU -> JigsawSudokuEngine
-        GameType.WINDOKU -> WindokuEngine
-        GameType.CONSECUTIVE_SUDOKU -> ConsecutiveSudokuEngine
-        GameType.ODD_EVEN_SUDOKU -> OddEvenSudokuEngine
-        GameType.WORDOKU -> WordokuEngine
-        GameType.SAMURAI_SUDOKU -> SamuraiSudokuEngine
-        GameType.KAKURO -> KakuroEngine
-        GameType.KENKEN -> KenKenEngine
-        GameType.FUTOSHIKI -> FutoshikiEngine
-        GameType.SKYSCRAPERS -> SkyscrapersEngine
-        GameType.STR8TS -> Str8tsEngine
-        GameType.NUMBRIX_HIDATO -> NumbrixHidatoEngine
+    fun getEngine(gameType: GameType): PuzzleEngine {
+        return when (gameType) {
+            GameType.SUDOKU -> SudokuEngine
+            GameType.WORDOKU -> WordokuEngine
+            GameType.KENKEN -> KenKenEngine
+            GameType.CROSSWORD -> CrosswordEngine
+            GameType.WORD_SEARCH -> WordSearchEngine
+        }
     }
 }

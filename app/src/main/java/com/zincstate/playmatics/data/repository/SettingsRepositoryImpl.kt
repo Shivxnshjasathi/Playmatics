@@ -26,7 +26,7 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override fun observeMusicEnabled(): Flow<Boolean> {
-        return settingsDao.getSettings().map { it?.musicEnabled ?: true }
+        return settingsDao.getSettings().map { it?.musicEnabled ?: false }
     }
 
     override fun observeSfxEnabled(): Flow<Boolean> {

@@ -11,6 +11,7 @@ import com.zincstate.playmatics.domain.repository.MatchRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -100,6 +101,43 @@ class MatchRepositoryImpl @Inject constructor(
 
     override fun observeOpponentPresence(): Flow<Boolean> {
         return matchManager.observePresenceChanges() ?: emptyFlow()
+    }
+
+    
+    override suspend fun sendDrawStroke(stroke: List<Float>) {
+        val userId = matchManager.getCurrentUserId() ?: return
+        matchManager.sendDrawStroke(userId, stroke)
+    }
+
+    override suspend fun sendGuess(guess: String) {
+        val userId = matchManager.getCurrentUserId() ?: return
+        matchManager.sendGuess(userId, guess)
+    }
+
+    override suspend fun sendClearBoard() {
+        val userId = matchManager.getCurrentUserId() ?: return
+        matchManager.sendClearBoard(userId)
+    }
+
+    override fun observeDrawStrokes(): Flow<List<Float>> {
+        val userId = matchManager.getCurrentUserId()
+        return matchManager.observeDrawStrokes()?.mapNotNull {
+            if (it.playerId != userId) it.stroke else null
+        } ?: kotlinx.coroutines.flow.emptyFlow()
+    }
+
+    override fun observeGuesses(): Flow<String> {
+        val userId = matchManager.getCurrentUserId()
+        return matchManager.observeGuesses()?.mapNotNull {
+            if (it.playerId != userId) it.guess else null
+        } ?: kotlinx.coroutines.flow.emptyFlow()
+    }
+
+    override fun observeClearBoard(): Flow<Unit> {
+        val userId = matchManager.getCurrentUserId()
+        return matchManager.observeClearBoard()?.mapNotNull {
+            if (it.playerId != userId) Unit else null
+        } ?: kotlinx.coroutines.flow.emptyFlow()
     }
 
     override fun observeConnectivity(): Flow<Boolean> {

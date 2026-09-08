@@ -95,17 +95,13 @@ fun SudokuBoard(
                         }
                     }
                 }
-                is VariantMetadata.DiagonalMarker -> {
-                    val diagColor = primary.copy(alpha = 0.2f)
-                    drawLine(diagColor, Offset.Zero, Offset(boardSizePx, boardSizePx), strokeWidth = thickLine * 2)
-                    drawLine(diagColor, Offset(boardSizePx, 0f), Offset(0f, boardSizePx), strokeWidth = thickLine * 2)
-                }
+                
                 else -> {}
             }
 
             // Cell borders (thin lines)
             for (i in 1 until gridDim) {
-                if (gridDim == 9 && variantMetadata !is VariantMetadata.JigsawRegions && variantMetadata !is VariantMetadata.KenKenCages && i % 3 == 0) continue
+                if (gridDim == 9 && variantMetadata !is VariantMetadata.KenKenCages && i % 3 == 0) continue
 
                 // Vertical
                 drawLine(
@@ -124,25 +120,10 @@ fun SudokuBoard(
             }
 
             // Block borders (thick lines)
-            if (gridDim == 9 && variantMetadata !is VariantMetadata.JigsawRegions && variantMetadata !is VariantMetadata.KenKenCages) {
+            if (gridDim == 9 && variantMetadata !is VariantMetadata.KenKenCages) {
                 for (i in 3..6 step 3) {
                     drawLine(onSurface, Offset(i * cellSizePx, 0f), Offset(i * cellSizePx, boardSizePx), strokeWidth = thickLine)
                     drawLine(onSurface, Offset(0f, i * cellSizePx), Offset(boardSizePx, i * cellSizePx), strokeWidth = thickLine)
-                }
-            } else if (variantMetadata is VariantMetadata.JigsawRegions) {
-                // Jigsaw thick borders
-                for (r in 0 until gridDim) {
-                    for (c in 0 until gridDim) {
-                        val region = variantMetadata.regionMap[r][c]
-                        val x = c * cellSizePx
-                        val y = r * cellSizePx
-                        if (c < gridDim - 1 && variantMetadata.regionMap[r][c + 1] != region) {
-                            drawLine(onSurface, Offset(x + cellSizePx, y), Offset(x + cellSizePx, y + cellSizePx), strokeWidth = thickLine)
-                        }
-                        if (r < gridDim - 1 && variantMetadata.regionMap[r + 1][c] != region) {
-                            drawLine(onSurface, Offset(x, y + cellSizePx), Offset(x + cellSizePx, y + cellSizePx), strokeWidth = thickLine)
-                        }
-                    }
                 }
             } else if (variantMetadata is VariantMetadata.KenKenCages) {
                 for (cage in variantMetadata.cages) {
@@ -181,7 +162,7 @@ fun SudokuBoard(
                         !isSelected
                 val isSameRowColBox = selectedCell != null && !isSelected && (
                         row == selectedCell.first || col == selectedCell.second ||
-                        (gridDim == 9 && variantMetadata !is VariantMetadata.JigsawRegions && variantMetadata !is VariantMetadata.KenKenCages &&
+                        (gridDim == 9 && variantMetadata !is VariantMetadata.KenKenCages &&
                                 (row / 3 == selectedCell.first / 3 && col / 3 == selectedCell.second / 3))
                         )
 

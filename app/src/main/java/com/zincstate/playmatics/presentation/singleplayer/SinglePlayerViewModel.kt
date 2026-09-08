@@ -318,4 +318,12 @@ class SinglePlayerViewModel @Inject constructor(
             }
         }
     }
+
+    fun onAction(action: String) {
+        when (action) {
+            "PLAY_WIN" -> audioPlayer.playWin()
+            "PLAY_ERROR" -> audioPlayer.playError()
+            "PLAY_CLICK" -> audioPlayer.playClick()
+        }
+    }
 }

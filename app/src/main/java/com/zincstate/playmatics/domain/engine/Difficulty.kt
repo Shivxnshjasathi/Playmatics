@@ -7,5 +7,6 @@ package com.zincstate.playmatics.domain.engine
 enum class Difficulty(val cellsToRemove: Int) {
     EASY(32),
     NORMAL(45),
-    HARD(54)
+    HARD(54),
+    EXPERT(60)
 }

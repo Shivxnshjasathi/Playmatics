@@ -38,6 +38,7 @@ import com.zincstate.playmatics.presentation.components.NumberPad
 import com.zincstate.playmatics.presentation.components.ResultModal
 import com.zincstate.playmatics.presentation.components.MatchResult
 import com.zincstate.playmatics.presentation.components.SudokuBoard
+import com.zincstate.playmatics.presentation.components.GameRenderer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -142,28 +143,24 @@ fun SinglePlayerScreen(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                SudokuBoard(
+                GameRenderer(
+                    gameType = state.gameType,
                     board = state.board,
+                    givenCells = state.givenCells,
                     cellStates = state.cellStates,
                     selectedCell = state.selectedCell,
                     conflictCells = state.conflictCells,
                     pencilNotes = state.pencilNotes,
-                    highlightMistakes = highlightMistakes,
-                    variantMetadata = state.variantMetadata,
-                    onCellClick = viewModel::selectCell,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                NumberPad(
-                    digitCounts = remember(state.board) { viewModel.getDigitCounts() },
                     isNotesMode = state.isNotesMode,
-                    hapticsEnabled = hapticsEnabled,
+                    variantMetadata = state.variantMetadata,
+                    highlightMistakes = true,
+                    hapticsEnabled = true,
+                    onCellClick = viewModel::selectCell,
                     onDigit = viewModel::enterDigit,
                     onErase = viewModel::eraseCell,
                     onToggleNotes = viewModel::toggleNotesMode,
-                    variantMetadata = state.variantMetadata
+                    digitCounts = viewModel.getDigitCounts(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

@@ -31,6 +31,16 @@ import javax.inject.Singleton
  * - Realtime channels (Broadcast + Presence)
  */
 @Singleton
+
+@Serializable
+data class DrawStrokeEvent(val playerId: String, val stroke: List<Float>)
+
+@Serializable
+data class GuessEvent(val playerId: String, val guess: String)
+
+@Serializable
+data class ClearEvent(val playerId: String)
+
 class SupabaseMatchManager @Inject constructor(
     private val supabase: SupabaseClient
 ) {
@@ -212,6 +222,47 @@ class SupabaseMatchManager @Inject constructor(
         return currentChannel?.broadcastFlow("forfeit")?.mapNotNull {
             val jsonPayload = it.payload as? BroadcastPayload.Json ?: return@mapNotNull null
             try { kotlinx.serialization.json.Json.decodeFromJsonElement(ForfeitEvent.serializer(), jsonPayload.value) } catch (e: Exception) { null }
+        }
+    }
+
+
+    // ------------------------------------------------------------------ //
+    //  Realtime — Drawing                                                 //
+    // ------------------------------------------------------------------ //
+
+    suspend fun sendDrawStroke(playerId: String, stroke: List<Float>) {
+        val payloadJson = kotlinx.serialization.json.Json.encodeToJsonElement(DrawStrokeEvent.serializer(), DrawStrokeEvent(playerId, stroke))
+        currentChannel?.broadcast(event = "draw_stroke", payload = BroadcastPayload.Json(payloadJson))
+    }
+
+    suspend fun sendGuess(playerId: String, guess: String) {
+        val payloadJson = kotlinx.serialization.json.Json.encodeToJsonElement(GuessEvent.serializer(), GuessEvent(playerId, guess))
+        currentChannel?.broadcast(event = "draw_guess", payload = BroadcastPayload.Json(payloadJson))
+    }
+
+    suspend fun sendClearBoard(playerId: String) {
+        val payloadJson = kotlinx.serialization.json.Json.encodeToJsonElement(ClearEvent.serializer(), ClearEvent(playerId))
+        currentChannel?.broadcast(event = "draw_clear", payload = BroadcastPayload.Json(payloadJson))
+    }
+
+    fun observeDrawStrokes(): Flow<DrawStrokeEvent>? {
+        return currentChannel?.broadcastFlow("draw_stroke")?.mapNotNull {
+            val jsonPayload = it.payload as? BroadcastPayload.Json ?: return@mapNotNull null
+            try { kotlinx.serialization.json.Json.decodeFromJsonElement(DrawStrokeEvent.serializer(), jsonPayload.value) } catch (e: Exception) { null }
+        }
+    }
+
+    fun observeGuesses(): Flow<GuessEvent>? {
+        return currentChannel?.broadcastFlow("draw_guess")?.mapNotNull {
+            val jsonPayload = it.payload as? BroadcastPayload.Json ?: return@mapNotNull null
+            try { kotlinx.serialization.json.Json.decodeFromJsonElement(GuessEvent.serializer(), jsonPayload.value) } catch (e: Exception) { null }
+        }
+    }
+
+    fun observeClearBoard(): Flow<ClearEvent>? {
+        return currentChannel?.broadcastFlow("draw_clear")?.mapNotNull {
+            val jsonPayload = it.payload as? BroadcastPayload.Json ?: return@mapNotNull null
+            try { kotlinx.serialization.json.Json.decodeFromJsonElement(ClearEvent.serializer(), jsonPayload.value) } catch (e: Exception) { null }
         }
     }
 

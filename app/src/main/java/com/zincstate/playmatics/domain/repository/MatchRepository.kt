@@ -51,4 +51,14 @@ interface MatchRepository {
 
     /** Check network connectivity. */
     fun observeConnectivity(): Flow<Boolean>
+
+    // Drawing specific
+    suspend fun sendDrawStroke(stroke: List<Float>)
+    suspend fun sendGuess(guess: String)
+    suspend fun sendClearBoard()
+    
+    fun observeDrawStrokes(): Flow<List<Float>>
+    fun observeGuesses(): Flow<String>
+    fun observeClearBoard(): Flow<Unit>
+
 }

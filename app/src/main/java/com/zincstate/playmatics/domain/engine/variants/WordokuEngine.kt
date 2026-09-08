@@ -1,54 +1,55 @@
 package com.zincstate.playmatics.domain.engine.variants
 
-import com.zincstate.playmatics.domain.engine.*
-import kotlin.random.Random
+import com.zincstate.playmatics.domain.engine.Difficulty
+import com.zincstate.playmatics.domain.engine.GameType
+import com.zincstate.playmatics.domain.engine.PuzzleEngine
+import com.zincstate.playmatics.domain.engine.SudokuEngine
+import com.zincstate.playmatics.domain.engine.SudokuPuzzle
+import com.zincstate.playmatics.domain.engine.VariantMetadata
 
-/**
- * Wordoku engine.
- *
- * Identical logic to classic Sudoku but the board is displayed using
- * 9 unique letters instead of digits 1–9.
- * Internally the board is still stored as ints; the UI maps them
- * through [VariantMetadata.WordokuMapping].
- */
 object WordokuEngine : PuzzleEngine {
+    override val gameType = GameType.WORDOKU
 
-    override val gameType: GameType = GameType.WORDOKU
-
-    private const val SIZE = 9
-
-    /** Pool of consonants+vowels that produce readable "wordoku" grids. */
-    private val LETTER_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toList()
-
+    // Generates a standard Sudoku puzzle but uses 1-9 to represent letters A-I
     override fun generate(seed: Long, difficulty: Difficulty): SudokuPuzzle {
-        val rng = Random(seed)
-
-        // Generate a standard Sudoku
-        val basePuzzle = SudokuEngine.generate(seed, difficulty)
-
-        // Pick 9 distinct letters deterministically
-        val shuffledLetters = LETTER_POOL.shuffled(rng)
-        val chosen = shuffledLetters.take(SIZE)
-        val letterMap = (1..SIZE).zip(chosen).toMap()
-
-        return SudokuPuzzle(
-            seed = seed,
-            difficulty = difficulty,
-            givenCells = basePuzzle.givenCells,
-            solution = basePuzzle.solution,
+        val sudokuPuzzle = SudokuEngine.generate(seed, difficulty)
+        
+        // We do NOT subtract 1, because 0 MUST mean empty cell in the generic UI.
+        // We will just provide a WordokuMapping so the UI knows to render 1-9 as A-I.
+        val letterMap = mapOf(
+            1 to 'A', 2 to 'B', 3 to 'C',
+            4 to 'D', 5 to 'E', 6 to 'F',
+            7 to 'G', 8 to 'H', 9 to 'I'
+        )
+        
+        return sudokuPuzzle.copy(
             gameType = GameType.WORDOKU,
             variantMetadata = VariantMetadata.WordokuMapping(letterMap)
         )
     }
 
     override fun isValidPlacement(
-        board: Array<IntArray>, row: Int, col: Int, value: Int, metadata: VariantMetadata?
-    ): Boolean = SudokuEngine.isValidPlacement(board, row, col, value)
+        board: Array<IntArray>,
+        row: Int,
+        col: Int,
+        value: Int,
+        metadata: VariantMetadata?
+    ): Boolean {
+        // Value is 1..9, same as Sudoku
+        return SudokuEngine.isValidPlacement(board, row, col, value, metadata)
+    }
 
     override fun conflictingCells(
-        board: Array<IntArray>, row: Int, col: Int, value: Int, metadata: VariantMetadata?
-    ): Set<Pair<Int, Int>> = SudokuEngine.conflictingCells(board, row, col, value)
+        board: Array<IntArray>,
+        row: Int,
+        col: Int,
+        value: Int,
+        metadata: VariantMetadata?
+    ): Set<Pair<Int, Int>> {
+        return SudokuEngine.conflictingCells(board, row, col, value, metadata)
+    }
 
-    override fun countCorrectCells(board: Array<IntArray>, solution: Array<IntArray>): Int =
-        SudokuEngine.countCorrectCells(board, solution)
+    override fun countCorrectCells(board: Array<IntArray>, solution: Array<IntArray>): Int {
+        return SudokuEngine.countCorrectCells(board, solution)
+    }
 }
