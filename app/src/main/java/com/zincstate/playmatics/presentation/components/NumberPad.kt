@@ -11,13 +11,16 @@ import androidx.compose.material.icons.outlined.Backspace
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditOff
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -55,50 +58,42 @@ fun NumberPad(
             // Placeholder for Undo (to match spacing in design, optionally)
             
             // Erase
-            IconButton(
+            FilledTonalIconButton(
                 onClick = {
                     if (hapticsEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onErase()
                 },
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(AccentBlueLight),
-                colors = IconButtonDefaults.iconButtonColors(contentColor = AccentBlue)
+                modifier = Modifier.size(56.dp),
+                shape = CircleShape
             ) {
-                Icon(Icons.Outlined.Backspace, contentDescription = "Erase", modifier = Modifier.size(24.dp))
+                Icon(Icons.Outlined.Backspace, contentDescription = "Erase", modifier = Modifier.size(28.dp))
             }
 
-            Spacer(modifier = Modifier.width(24.dp))
+            Spacer(modifier = Modifier.width(32.dp))
 
             // Notes
-            val notesBgColor by animateColorAsState(
-                targetValue = if (isNotesMode) AccentBlue else AccentBlueLight,
-                animationSpec = tween(200),
-                label = "notesBgColor"
-            )
-            val notesIconColor by animateColorAsState(
-                targetValue = if (isNotesMode) MaterialTheme.colorScheme.surface else AccentBlue,
-                animationSpec = tween(200),
-                label = "notesIconColor"
-            )
-
-            IconButton(
-                onClick = {
-                    if (hapticsEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onToggleNotes()
-                },
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(notesBgColor),
-                colors = IconButtonDefaults.iconButtonColors(contentColor = notesIconColor)
-            ) {
-                Icon(
-                    if (isNotesMode) Icons.Outlined.Edit else Icons.Outlined.EditOff, 
-                    contentDescription = "Notes", 
-                    modifier = Modifier.size(24.dp)
-                )
+            if (isNotesMode) {
+                FilledIconButton(
+                    onClick = {
+                        if (hapticsEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onToggleNotes()
+                    },
+                    modifier = Modifier.size(56.dp),
+                    shape = CircleShape
+                ) {
+                    Icon(Icons.Outlined.Edit, contentDescription = "Notes", modifier = Modifier.size(28.dp))
+                }
+            } else {
+                FilledTonalIconButton(
+                    onClick = {
+                        if (hapticsEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onToggleNotes()
+                    },
+                    modifier = Modifier.size(56.dp),
+                    shape = CircleShape
+                ) {
+                    Icon(Icons.Outlined.EditOff, contentDescription = "Notes", modifier = Modifier.size(28.dp))
+                }
             }
         }
 
@@ -118,7 +113,10 @@ fun NumberPad(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .padding(horizontal = 2.dp)
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (disabled) Color.Transparent else MaterialTheme.colorScheme.surfaceVariant)
                         .clickable(enabled = !disabled) {
                             if (hapticsEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onDigit(digit)
@@ -126,9 +124,9 @@ fun NumberPad(
                 ) {
                     Text(
                         text = digit.toString(),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = if (disabled) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurface
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (disabled) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

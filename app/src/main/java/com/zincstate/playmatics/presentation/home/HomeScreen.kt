@@ -36,7 +36,7 @@ fun HomeScreen(
     connectivityObserver: ConnectivityObserver? = null
 ) {
     val isOnline = connectivityObserver?.isOnline?.collectAsState()?.value ?: false
-    var selectedDifficulty by remember { mutableStateOf(Difficulty.NORMAL) }
+    var showDifficultyDialog by remember { mutableStateOf(false) }
     val difficultyOptions = listOf(Difficulty.EASY, Difficulty.NORMAL, Difficulty.HARD)
 
     Scaffold(
@@ -83,30 +83,9 @@ fun HomeScreen(
                     modifier = Modifier.padding(bottom = 64.dp)
                 )
 
-            // Difficulty Selector
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp)
-            ) {
-                difficultyOptions.forEachIndexed { index, diff ->
-                    SegmentedButton(
-                        shape = SegmentedButtonDefaults.itemShape(index = index, count = difficultyOptions.size),
-                        onClick = { selectedDifficulty = diff },
-                        selected = diff == selectedDifficulty,
-                        colors = SegmentedButtonDefaults.colors(
-                            activeContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                            activeContentColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(diff.name.lowercase().replaceFirstChar { it.uppercase() })
-                    }
-                }
-            }
-
             // Play Offline Button (like "New Game")
             Button(
-                onClick = { onPlaySingle(Random.nextLong(), selectedDifficulty) },
+                onClick = { showDifficultyDialog = true },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -194,5 +173,38 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    if (showDifficultyDialog) {
+        AlertDialog(
+            onDismissRequest = { showDifficultyDialog = false },
+            title = { 
+                Text("Select Difficulty", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) 
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    difficultyOptions.forEach { diff ->
+                        Button(
+                            onClick = { 
+                                showDifficultyDialog = false
+                                onPlaySingle(Random.nextLong(), diff) 
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Text(diff.name.lowercase().replaceFirstChar { it.uppercase() }, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     }
 }

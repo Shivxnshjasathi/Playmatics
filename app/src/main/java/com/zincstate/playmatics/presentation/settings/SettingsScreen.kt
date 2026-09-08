@@ -190,11 +190,7 @@ private fun SettingToggle(
             }
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.surface,
-                    checkedTrackColor = AccentBlue
-                )
+                onCheckedChange = onCheckedChange
             )
         }
         HorizontalDivider(

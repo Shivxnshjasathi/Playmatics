@@ -106,7 +106,7 @@ class SupabaseMatchManager @Inject constructor(
         return supabase.postgrest.rpc(
             "join_match",
             JoinMatchParams(roomCode, guestId)
-        ).decodeSingle<MatchDto>()
+        ).decodeAs<MatchDto>()
     }
 
     @Serializable
@@ -121,7 +121,7 @@ class SupabaseMatchManager @Inject constructor(
             supabase.postgrest.rpc(
                 "complete_match",
                 CompleteMatchParams(matchId, winnerId)
-            ).decodeSingleOrNull<MatchDto>()
+            ).decodeAs<MatchDto>()
         } catch (_: Exception) {
             null
         }
@@ -139,7 +139,7 @@ class SupabaseMatchManager @Inject constructor(
             supabase.postgrest.rpc(
                 "forfeit_match",
                 ForfeitMatchParams(matchId, forfeitingPlayerId)
-            ).decodeSingleOrNull<MatchDto>()
+            ).decodeAs<MatchDto>()
         } catch (_: Exception) {
             null
         }
@@ -154,7 +154,7 @@ class SupabaseMatchManager @Inject constructor(
         leaveMatchChannel() // clean up any existing channel
         val channel = supabase.realtime.channel("match:$matchId")
         currentChannel = channel
-        channel.subscribe()
+        channel.subscribe(blockUntilSubscribed = true)
     }
 
     /** Track own presence in the channel. */
@@ -227,10 +227,23 @@ class SupabaseMatchManager @Inject constructor(
     //  Realtime — Postgres Changes (for waiting lobby)                    //
     // ------------------------------------------------------------------ //
 
-    /** Observe changes to a specific match row. */
+    /** Observe changes to a specific match row (via polling for robust sync). */
     fun observeMatchChanges(matchId: String): Flow<MatchDto> {
-        val channel = supabase.realtime.channel("match-changes:$matchId")
-        // Subscribe to postgres changes on the matches table filtered by id
-        return channel.broadcastFlow<MatchDto>(event = "match-update").mapNotNull { it }
+        return kotlinx.coroutines.flow.flow {
+            while (true) {
+                try {
+                    val match = supabase.from("matches")
+                        .select { filter { eq("id", matchId) } }
+                        .decodeSingleOrNull<MatchDto>()
+                    
+                    if (match != null) {
+                        emit(match)
+                    }
+                } catch (e: Exception) {
+                    // best effort
+                }
+                kotlinx.coroutines.delay(2000)
+            }
+        }
     }
 }

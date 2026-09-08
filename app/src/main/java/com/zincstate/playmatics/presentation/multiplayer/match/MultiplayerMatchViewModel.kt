@@ -263,49 +263,8 @@ class MultiplayerMatchViewModel @Inject constructor(
         viewModelScope.launch {
             matchRepository.observeOpponentPresence().collect { isPresent ->
                 _state.update { it.copy(isOpponentOnline = isPresent) }
-
-                if (!isPresent && _state.value.matchResult == null) {
-                    startDisconnectGraceTimer()
-                } else {
-                    cancelDisconnectGraceTimer()
-                }
             }
         }
-    }
-
-    private fun startDisconnectGraceTimer() {
-        disconnectTimerJob?.cancel()
-        disconnectTimerJob = viewModelScope.launch {
-            for (i in 20 downTo 1) {
-                _state.update { it.copy(opponentDisconnectSeconds = i) }
-                delay(1000)
-
-                // Check if they reconnected
-                if (_state.value.isOpponentOnline) {
-                    _state.update { it.copy(opponentDisconnectSeconds = 0) }
-                    return@launch
-                }
-            }
-
-            // Grace period expired — forfeit the disconnected opponent
-            if (_state.value.matchResult == null) {
-                val userId = matchRepository.ensureAuthenticated()
-                // Determine opponent ID and forfeit them
-                matchRepository.forfeitMatch(matchId, "") // The RPC figures out the opponent
-                _state.update {
-                    it.copy(
-                        matchResult = MatchResult.FORFEIT,
-                        opponentDisconnectSeconds = 0
-                    )
-                }
-                puzzleRepository.recordMultiplayerResult(true)
-            }
-        }
-    }
-
-    private fun cancelDisconnectGraceTimer() {
-        disconnectTimerJob?.cancel()
-        _state.update { it.copy(opponentDisconnectSeconds = 0) }
     }
 
     // ------------------------------------------------------------------ //
