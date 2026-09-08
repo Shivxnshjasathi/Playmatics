@@ -26,3 +26,6 @@ object Stats
 
 @Serializable
 object Settings
+
+@Serializable
+object About

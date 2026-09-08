@@ -14,6 +14,7 @@ import com.zincstate.playmatics.presentation.multiplayer.match.MultiplayerMatchS
 import com.zincstate.playmatics.presentation.settings.SettingsScreen
 import com.zincstate.playmatics.presentation.singleplayer.SinglePlayerScreen
 import com.zincstate.playmatics.presentation.stats.StatsScreen
+import com.zincstate.playmatics.presentation.about.AboutScreen
 
 @Composable
 fun NavGraph(
@@ -42,6 +43,9 @@ fun NavGraph(
                 },
                 onSettings = {
                     navController.navigate(Settings)
+                },
+                onAbout = {
+                    navController.navigate(About)
                 },
                 connectivityObserver = connectivityObserver
             )
@@ -107,7 +111,15 @@ fun NavGraph(
         }
 
         composable<Settings> {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<About> {
+            AboutScreen(
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Functions
@@ -40,6 +41,7 @@ fun HomeScreen(
     onJoinRoom: () -> Unit,
     onStats: () -> Unit,
     onSettings: () -> Unit,
+    onAbout: () -> Unit,
     connectivityObserver: ConnectivityObserver? = null
 ) {
     val isOnline = connectivityObserver?.isOnline?.collectAsState()?.value ?: false
@@ -99,6 +101,22 @@ fun HomeScreen(
                     onClick = { scope.launch { drawerState.close() } },
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
+
+                Spacer(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Filled.Info, contentDescription = "About Us") },
+                    label = { Text("About Us", fontWeight = FontWeight.SemiBold) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onAbout()
+                    },
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     ) {
