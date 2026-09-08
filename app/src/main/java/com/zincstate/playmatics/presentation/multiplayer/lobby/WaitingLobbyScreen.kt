@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
@@ -59,6 +60,7 @@ fun WaitingLobbyScreen(
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     val state by viewModel.waitingState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val alpha by infiniteTransition.animateFloat(
@@ -79,9 +81,15 @@ fun WaitingLobbyScreen(
         viewModel.events.collectLatest { event ->
             when (event) {
                 is LobbyEvent.MatchStarted -> onMatchStarted(event.matchId, event.seed, event.difficulty, event.gameType)
+                is LobbyEvent.Error -> android.widget.Toast.makeText(context, event.message, android.widget.Toast.LENGTH_LONG).show()
                 else -> {}
             }
         }
+    }
+
+    BackHandler {
+        viewModel.cancelRoom()
+        onCancel()
     }
 
     Scaffold(
@@ -186,11 +194,6 @@ fun WaitingLobbyScreen(
             shape = RoundedCornerShape(14.dp)
         ) {
             Text("Cancel")
-        }
-
-        state.error?.let { error ->
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

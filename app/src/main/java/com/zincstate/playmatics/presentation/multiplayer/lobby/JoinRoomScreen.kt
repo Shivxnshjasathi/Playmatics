@@ -49,11 +49,13 @@ fun JoinRoomScreen(
     viewModel: LobbyViewModel = hiltViewModel()
 ) {
     val state by viewModel.joinState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
                 is LobbyEvent.JoinSuccess -> onMatchJoined(event.matchId, event.seed, event.difficulty, event.gameType)
+                is LobbyEvent.Error -> android.widget.Toast.makeText(context, event.message, android.widget.Toast.LENGTH_LONG).show()
                 else -> {}
             }
         }
@@ -201,15 +203,6 @@ fun JoinRoomScreen(
                         Text("Cancel")
                     }
                 }
-            }
-
-            state.error?.let { error ->
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
             }
         }
     }

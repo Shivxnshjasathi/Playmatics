@@ -100,7 +100,7 @@ fun NavGraph(
                         popUpTo<Home>()
                     }
                 },
-                onCancel = { navController.popBackStack(Home, false) }
+                onCancel = { navController.popBackStack<Home>(inclusive = false) }
             )
         }
 
@@ -111,7 +111,7 @@ fun NavGraph(
                 seed = route.seed,
                 difficulty = route.difficulty,
                 gameType = route.gameType,
-                onHome = { navController.popBackStack(Home, false) },
+                onHome = { navController.popBackStack<Home>(inclusive = false) },
                 onSettings = { navController.navigate(Settings(route.gameType)) }
             )
         }

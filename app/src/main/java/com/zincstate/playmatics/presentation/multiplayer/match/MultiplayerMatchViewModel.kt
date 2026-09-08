@@ -66,7 +66,8 @@ data class MultiplayerUiState(
 @HiltViewModel
 class MultiplayerMatchViewModel @Inject constructor(
     private val matchRepository: MatchRepository,
-    private val puzzleRepository: PuzzleRepository
+    private val puzzleRepository: PuzzleRepository,
+    private val audioPlayer: com.zincstate.playmatics.presentation.audio.AudioPlayer
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MultiplayerUiState())
@@ -179,6 +180,11 @@ class MultiplayerMatchViewModel @Inject constructor(
             val totalCells = current.solution.sumOf { r -> r.count { it != 0 } }
             if (correctCount == totalCells) {
                 onMatchCompleted()
+                audioPlayer.playWin()
+            } else if (conflicts.isNotEmpty()) {
+                audioPlayer.playError()
+            } else {
+                audioPlayer.playClick()
             }
         }
     }
@@ -212,6 +218,8 @@ class MultiplayerMatchViewModel @Inject constructor(
             lastBroadcastedCount = correctCount
             viewModelScope.launch { matchRepository.sendProgress(correctCount) }
         }
+        
+        audioPlayer.playClick()
     }
 
     fun toggleNotesMode() {

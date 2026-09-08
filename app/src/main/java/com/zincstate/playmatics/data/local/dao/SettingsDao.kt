@@ -25,4 +25,10 @@ interface SettingsDao {
 
     @Query("UPDATE settings SET highlightMistakes = :enabled WHERE id = 1")
     suspend fun setHighlightMistakes(enabled: Boolean): Int
+
+    @Query("UPDATE settings SET musicEnabled = :enabled WHERE id = 1")
+    suspend fun setMusicEnabled(enabled: Boolean): Int
+
+    @Query("UPDATE settings SET sfxEnabled = :enabled WHERE id = 1")
+    suspend fun setSfxEnabled(enabled: Boolean): Int
 }

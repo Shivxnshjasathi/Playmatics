@@ -32,6 +32,7 @@ object AppModule {
             SudokuDatabase::class.java,
             "sudoku_db"
         )
+            .fallbackToDestructiveMigration()
             .build()
     }
 
@@ -43,6 +44,12 @@ object AppModule {
 
     @Provides
     fun provideSettingsDao(db: SudokuDatabase): SettingsDao = db.settingsDao()
+
+    @Provides
+    @Singleton
+    fun provideAudioPlayer(@ApplicationContext context: Context): com.zincstate.playmatics.presentation.audio.AudioPlayer {
+        return com.zincstate.playmatics.presentation.audio.AudioPlayer(context).apply { init() }
+    }
 }
 
 @Module

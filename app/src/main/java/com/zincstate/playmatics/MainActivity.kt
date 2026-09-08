@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var connectivityObserver: ConnectivityObserver
+    @Inject lateinit var audioPlayer: com.zincstate.playmatics.presentation.audio.AudioPlayer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +31,18 @@ class MainActivity : ComponentActivity() {
         setContent {
             val themeMode by settingsRepository.observeThemeMode()
                 .collectAsState(initial = null)
+
+            val musicEnabled by settingsRepository.observeMusicEnabled()
+                .collectAsState(initial = true)
+            val sfxEnabled by settingsRepository.observeSfxEnabled()
+                .collectAsState(initial = true)
+                
+            androidx.compose.runtime.LaunchedEffect(musicEnabled) {
+                audioPlayer.setMusicEnabled(musicEnabled)
+            }
+            androidx.compose.runtime.LaunchedEffect(sfxEnabled) {
+                audioPlayer.setSfxEnabled(sfxEnabled)
+            }
 
             PlaymaticsTheme(
                 darkTheme = when (themeMode) {
@@ -50,5 +63,20 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        audioPlayer.resumeMusic()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        audioPlayer.pauseMusic()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        audioPlayer.release()
     }
 }

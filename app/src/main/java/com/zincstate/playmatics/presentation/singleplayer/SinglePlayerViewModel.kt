@@ -28,7 +28,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SinglePlayerViewModel @Inject constructor(
     private val puzzleRepository: PuzzleRepository,
-    settingsRepository: SettingsRepository
+    settingsRepository: SettingsRepository,
+    private val audioPlayer: com.zincstate.playmatics.presentation.audio.AudioPlayer
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GameState())
@@ -161,6 +162,11 @@ class SinglePlayerViewModel @Inject constructor(
 
             if (isCompleted) {
                 onPuzzleCompleted()
+                audioPlayer.playWin()
+            } else if (conflicts.isNotEmpty()) {
+                audioPlayer.playError()
+            } else {
+                audioPlayer.playClick()
             }
         }
 
@@ -193,6 +199,7 @@ class SinglePlayerViewModel @Inject constructor(
             )
         }
 
+        audioPlayer.playClick()
         scheduleSave()
     }
 

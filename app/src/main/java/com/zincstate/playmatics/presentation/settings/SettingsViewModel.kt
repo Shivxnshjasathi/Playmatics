@@ -24,6 +24,12 @@ class SettingsViewModel @Inject constructor(
     val highlightMistakes: StateFlow<Boolean> = settingsRepository.observeHighlightMistakes()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val musicEnabled: StateFlow<Boolean> = settingsRepository.observeMusicEnabled()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    val sfxEnabled: StateFlow<Boolean> = settingsRepository.observeSfxEnabled()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     fun setThemeMode(isDark: Boolean?) {
         viewModelScope.launch { settingsRepository.setThemeMode(isDark) }
     }
@@ -34,5 +40,13 @@ class SettingsViewModel @Inject constructor(
 
     fun setHighlightMistakes(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setHighlightMistakes(enabled) }
+    }
+
+    fun setMusicEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setMusicEnabled(enabled) }
+    }
+
+    fun setSfxEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setSfxEnabled(enabled) }
     }
 }

@@ -17,7 +17,7 @@ import com.zincstate.playmatics.data.local.entity.StatsEntity
         StatsEntity::class,
         SettingsEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

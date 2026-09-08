@@ -98,7 +98,8 @@ class LobbyViewModel @Inject constructor(
                 _createState.update { it.copy(isCreating = false) }
                 _events.emit(LobbyEvent.RoomCreated(match.id, match.roomCode))
             } catch (e: Exception) {
-                _createState.update { it.copy(isCreating = false, error = e.message) }
+                _createState.update { it.copy(isCreating = false) }
+                _events.emit(LobbyEvent.Error(e.toUserFriendlyMessage()))
             }
         }
     }
@@ -123,7 +124,7 @@ class LobbyViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                _waitingState.update { it.copy(error = e.message) }
+                _events.emit(LobbyEvent.Error(e.toUserFriendlyMessage()))
             }
         }
     }
@@ -151,7 +152,7 @@ class LobbyViewModel @Inject constructor(
         viewModelScope.launch {
             val code = _joinState.value.roomCode
             if (code.length != 6) {
-                _joinState.update { it.copy(error = "Enter a 6-character room code") }
+                _events.emit(LobbyEvent.Error("Enter a 6-character room code"))
                 return@launch
             }
 
@@ -161,10 +162,12 @@ class LobbyViewModel @Inject constructor(
                 if (match != null) {
                     _joinState.update { it.copy(isSearching = false, foundMatch = match) }
                 } else {
-                    _joinState.update { it.copy(isSearching = false, error = "Room not found or already started") }
+                    _joinState.update { it.copy(isSearching = false) }
+                    _events.emit(LobbyEvent.Error("Room not found or already started"))
                 }
             } catch (e: Exception) {
-                _joinState.update { it.copy(isSearching = false, error = e.message) }
+                _joinState.update { it.copy(isSearching = false) }
+                _events.emit(LobbyEvent.Error(e.toUserFriendlyMessage()))
             }
         }
     }
@@ -184,10 +187,13 @@ class LobbyViewModel @Inject constructor(
                     )
                 )
             } catch (e: Exception) {
-                val msg = if (e.message?.contains("ROOM_UNAVAILABLE") == true)
-                    "Room not found or already started"
-                else e.message ?: "Failed to join"
-                _joinState.update { it.copy(isJoining = false, error = msg) }
+                val msg = if (e.message?.contains("ROOM_UNAVAILABLE") == true) {
+                    "Room not found or already started (Err: ROOM_UNAVAILABLE)."
+                } else {
+                    e.toUserFriendlyMessage()
+                }
+                _joinState.update { it.copy(isJoining = false) }
+                _events.emit(LobbyEvent.Error(msg))
             }
         }
     }
@@ -204,6 +210,22 @@ class LobbyViewModel @Inject constructor(
             repeat(6) {
                 append(SAFE_ALPHABET[Random.nextInt(SAFE_ALPHABET.length)])
             }
+        }
+    }
+
+    private fun Throwable.toUserFriendlyMessage(): String {
+        val msg = this.message ?: ""
+        return when {
+            this is java.net.UnknownHostException || msg.contains("Unable to resolve host") || msg.contains("No address associated with hostname") -> 
+                "Network Error (Err: DNS_RESOLUTION_FAILED): Please check your internet connection."
+            this is java.net.SocketTimeoutException || msg.contains("timeout") || msg.contains("HttpRequestTimeoutException") ->
+                "Network Error (Err: CONNECTION_TIMEOUT): The request timed out. Please try again."
+            this is java.net.ConnectException || msg.contains("Failed to connect") ->
+                "Network Error (Err: CONNECTION_REFUSED): Unable to connect to the server."
+            msg.contains("duplicate key value violates unique constraint") -> 
+                "Room code collision (Err: CODE_COLLISION): Please try creating again."
+            else -> 
+                "An unexpected error occurred (Err: UNKNOWN_ERROR). Please try again."
         }
     }
 }

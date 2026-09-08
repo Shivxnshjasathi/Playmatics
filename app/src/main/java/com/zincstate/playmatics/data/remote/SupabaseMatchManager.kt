@@ -44,15 +44,19 @@ class SupabaseMatchManager @Inject constructor(
     /** Sign in anonymously if no session exists. Returns stable user ID. */
     suspend fun ensureAuthenticated(): String {
         currentUserId?.let { return it }
-        val session = supabase.auth.currentSessionOrNull()
+        val session = try { supabase.auth.currentSessionOrNull() } catch (e: Exception) { null }
         if (session != null) {
             currentUserId = session.user?.id ?: ""
             return currentUserId!!
         }
-        supabase.auth.signInAnonymously()
-        val userId = supabase.auth.currentUserOrNull()?.id ?: ""
-        currentUserId = userId
-        return userId
+        return try {
+            supabase.auth.signInAnonymously()
+            val userId = supabase.auth.currentUserOrNull()?.id ?: ""
+            currentUserId = userId
+            userId
+        } catch (e: Exception) {
+            ""
+        }
     }
 
     fun getCurrentUserId(): String = currentUserId ?: ""

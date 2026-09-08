@@ -256,10 +256,11 @@ fun HomeScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = activeGame.displayName,
-                            fontSize = 36.sp,
+                            fontSize = if (activeGame.displayName.length > 14) 28.sp else 36.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onBackground,
                             letterSpacing = (-1.0).sp,
+                            maxLines = 1,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(

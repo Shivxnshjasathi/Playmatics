@@ -25,6 +25,14 @@ class SettingsRepositoryImpl @Inject constructor(
         return settingsDao.getSettings().map { it?.highlightMistakes ?: true }
     }
 
+    override fun observeMusicEnabled(): Flow<Boolean> {
+        return settingsDao.getSettings().map { it?.musicEnabled ?: true }
+    }
+
+    override fun observeSfxEnabled(): Flow<Boolean> {
+        return settingsDao.getSettings().map { it?.sfxEnabled ?: true }
+    }
+
     override suspend fun setThemeMode(isDark: Boolean?) {
         settingsDao.insertDefault()
         settingsDao.setThemeMode(isDark)
@@ -38,5 +46,15 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun setHighlightMistakes(enabled: Boolean) {
         settingsDao.insertDefault()
         settingsDao.setHighlightMistakes(enabled)
+    }
+
+    override suspend fun setMusicEnabled(enabled: Boolean) {
+        settingsDao.insertDefault()
+        settingsDao.setMusicEnabled(enabled)
+    }
+
+    override suspend fun setSfxEnabled(enabled: Boolean) {
+        settingsDao.insertDefault()
+        settingsDao.setSfxEnabled(enabled)
     }
 }

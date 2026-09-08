@@ -41,11 +41,13 @@ fun CreateRoomScreen(
     viewModel: LobbyViewModel = hiltViewModel()
 ) {
     val state by viewModel.createState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
                 is LobbyEvent.RoomCreated -> onRoomCreated(event.matchId, event.roomCode)
+                is LobbyEvent.Error -> android.widget.Toast.makeText(context, event.message, android.widget.Toast.LENGTH_LONG).show()
                 else -> {}
             }
         }
@@ -110,15 +112,6 @@ fun CreateRoomScreen(
                 ) {
                     Text("Create Room", fontWeight = FontWeight.SemiBold)
                 }
-            }
-
-            state.error?.let { error ->
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
             }
         }
     }

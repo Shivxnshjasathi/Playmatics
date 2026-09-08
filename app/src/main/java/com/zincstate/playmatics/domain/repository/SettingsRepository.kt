@@ -14,9 +14,17 @@ interface SettingsRepository {
 
     fun observeHighlightMistakes(): Flow<Boolean>
 
+    fun observeMusicEnabled(): Flow<Boolean>
+
+    fun observeSfxEnabled(): Flow<Boolean>
+
     suspend fun setThemeMode(isDark: Boolean?)
 
     suspend fun setHapticsEnabled(enabled: Boolean)
 
     suspend fun setHighlightMistakes(enabled: Boolean)
+
+    suspend fun setMusicEnabled(enabled: Boolean)
+
+    suspend fun setSfxEnabled(enabled: Boolean)
 }

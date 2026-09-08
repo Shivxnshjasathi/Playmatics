@@ -47,6 +47,8 @@ fun SettingsScreen(
     val themeMode by viewModel.themeMode.collectAsState()
     val hapticsEnabled by viewModel.hapticsEnabled.collectAsState()
     val highlightMistakes by viewModel.highlightMistakes.collectAsState()
+    val musicEnabled by viewModel.musicEnabled.collectAsState()
+    val sfxEnabled by viewModel.sfxEnabled.collectAsState()
 
     Scaffold(
         topBar = {
@@ -135,6 +137,20 @@ fun SettingsScreen(
                 subtitle = "Vibrate on button press",
                 checked = hapticsEnabled,
                 onCheckedChange = viewModel::setHapticsEnabled
+            )
+
+            SettingToggle(
+                title = "Background Music",
+                subtitle = "Play music during the game",
+                checked = musicEnabled,
+                onCheckedChange = viewModel::setMusicEnabled
+            )
+
+            SettingToggle(
+                title = "Sound Effects",
+                subtitle = "Play sounds for taps and events",
+                checked = sfxEnabled,
+                onCheckedChange = viewModel::setSfxEnabled
             )
 
             Spacer(modifier = Modifier.height(24.dp))
