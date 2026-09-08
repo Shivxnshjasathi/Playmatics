@@ -8,6 +8,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Functions
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -15,6 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,29 +46,85 @@ fun HomeScreen(
     var showDifficultyDialog by remember { mutableStateOf(false) }
     val difficultyOptions = listOf(Difficulty.EASY, Difficulty.NORMAL, Difficulty.HARD)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = { /* TODO Menu */ }) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onBackground)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onBackground)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = MaterialTheme.colorScheme.background,
+                drawerContentColor = MaterialTheme.colorScheme.onBackground
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "playmatics.",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = com.zincstate.playmatics.ui.theme.LogoGreen,
+                    letterSpacing = (-1.0).sp,
+                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 24.dp)
                 )
-            )
-        },
-        bottomBar = {}, // Replaced with floating nav bar inside Box
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Box(
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Filled.GridOn, contentDescription = "Sudoku") },
+                    label = { Text("Sudoku", fontWeight = FontWeight.Bold) },
+                    selected = true,
+                    onClick = { scope.launch { drawerState.close() } },
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Filled.Calculate, contentDescription = "2048") },
+                    label = { Text("2048 (Coming Soon)") },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() } },
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Filled.Flag, contentDescription = "Minesweeper") },
+                    label = { Text("Minesweeper (Soon)") },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() } },
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Filled.Functions, contentDescription = "Kakuro") },
+                    label = { Text("Kakuro (Soon)") },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() } },
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+            }
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onBackground)
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = onSettings) {
+                            Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onBackground)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    )
+                )
+            },
+            bottomBar = {}, // Replaced with floating nav bar inside Box
+            containerColor = MaterialTheme.colorScheme.background
+        ) { innerPadding ->
+            Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -173,6 +236,7 @@ fun HomeScreen(
                 }
             }
         }
+    }
     }
 
     if (showDifficultyDialog) {

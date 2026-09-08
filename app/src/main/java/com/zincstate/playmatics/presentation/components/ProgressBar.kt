@@ -1,7 +1,8 @@
 package com.zincstate.playmatics.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,12 +35,18 @@ fun DualProgressBar(
 ) {
     val animatedYou by animateFloatAsState(
         targetValue = yourProgress,
-        animationSpec = tween(300),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "yourProgress"
     )
     val animatedOpp by animateFloatAsState(
         targetValue = opponentProgress,
-        animationSpec = tween(300),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "oppProgress"
     )
 
