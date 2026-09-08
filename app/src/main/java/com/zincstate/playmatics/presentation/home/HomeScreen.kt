@@ -75,7 +75,7 @@ fun HomeScreen(
             ModalDrawerSheet(
                 drawerContainerColor = MaterialTheme.colorScheme.background,
                 drawerContentColor = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.width(300.dp)
+                modifier = Modifier.width(300.dp).fillMaxHeight()
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize()
