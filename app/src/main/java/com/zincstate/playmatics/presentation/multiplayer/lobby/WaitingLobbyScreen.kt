@@ -37,17 +37,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Scaffold
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WaitingLobbyScreen(
     matchId: String,
     roomCode: String,
-    onMatchStarted: (matchId: String, seed: Long, difficulty: String) -> Unit,
+    onMatchStarted: (matchId: String, seed: Long, difficulty: String, gameType: String) -> Unit,
     onCancel: () -> Unit,
     viewModel: LobbyViewModel = hiltViewModel()
 ) {
+    @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
     val state by viewModel.waitingState.collectAsState()
 
@@ -69,16 +78,43 @@ fun WaitingLobbyScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is LobbyEvent.MatchStarted -> onMatchStarted(event.matchId, event.seed, event.difficulty)
+                is LobbyEvent.MatchStarted -> onMatchStarted(event.matchId, event.seed, event.difficulty, event.gameType)
                 else -> {}
             }
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { 
+                    Text(
+                        text = "playmatics.",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
+                        letterSpacing = (-0.5).sp
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        viewModel.cancelRoom()
+                        onCancel()
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -157,4 +193,5 @@ fun WaitingLobbyScreen(
             Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
     }
+}
 }

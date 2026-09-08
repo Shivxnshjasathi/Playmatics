@@ -12,6 +12,7 @@ create table if not exists public.matches (
   room_code     text        not null unique,
   seed          bigint      not null,
   difficulty    text        not null check (difficulty in ('easy', 'normal', 'hard')),
+  game_type     text        not null default 'sudoku',
   status        text        not null default 'waiting' check (status in ('waiting', 'in_progress', 'completed')),
   host_id       uuid        not null,
   guest_id      uuid,
@@ -139,3 +140,8 @@ $$;
 --   '*/10 * * * *',
 --   $$ select public.cleanup_stale_matches(); $$
 -- );
+
+-- ============================================================
+-- 7. Migrations (Run these if updating an existing schema)
+-- ============================================================
+-- ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS game_type text not null default 'sudoku';

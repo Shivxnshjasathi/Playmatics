@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,13 +38,13 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JoinRoomScreen(
-    onMatchJoined: (matchId: String, seed: Long, difficulty: String) -> Unit,
+    onMatchJoined: (matchId: String, seed: Long, difficulty: String, gameType: String) -> Unit,
     onBack: () -> Unit,
     viewModel: LobbyViewModel = hiltViewModel()
 ) {
@@ -52,7 +53,7 @@ fun JoinRoomScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is LobbyEvent.JoinSuccess -> onMatchJoined(event.matchId, event.seed, event.difficulty)
+                is LobbyEvent.JoinSuccess -> onMatchJoined(event.matchId, event.seed, event.difficulty, event.gameType)
                 else -> {}
             }
         }
@@ -60,8 +61,16 @@ fun JoinRoomScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Join Room") },
+            CenterAlignedTopAppBar(
+                title = { 
+                    Text(
+                        text = "playmatics.",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
+                        letterSpacing = (-0.5).sp
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

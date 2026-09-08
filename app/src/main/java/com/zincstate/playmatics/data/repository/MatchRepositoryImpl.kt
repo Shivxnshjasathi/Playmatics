@@ -24,13 +24,14 @@ class MatchRepositoryImpl @Inject constructor(
         return matchManager.ensureAuthenticated()
     }
 
-    override suspend fun createRoom(difficulty: Difficulty, seed: Long, roomCode: String): Match {
+    override suspend fun createRoom(difficulty: Difficulty, seed: Long, roomCode: String, gameType: String): Match {
         val userId = matchManager.getCurrentUserId()
         val dto = matchManager.createRoom(
             MatchDto(
                 roomCode = roomCode,
                 seed = seed,
                 difficulty = difficulty.name.lowercase(),
+                gameType = gameType,
                 hostId = userId
             )
         )
@@ -116,6 +117,7 @@ class MatchRepositoryImpl @Inject constructor(
         difficulty = try {
             Difficulty.valueOf(difficulty.uppercase())
         } catch (_: Exception) { Difficulty.NORMAL },
+        gameType = gameType,
         status = when (status) {
             "waiting" -> MatchStatus.WAITING
             "in_progress" -> MatchStatus.IN_PROGRESS

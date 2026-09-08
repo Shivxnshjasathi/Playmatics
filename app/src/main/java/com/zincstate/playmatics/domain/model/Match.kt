@@ -10,6 +10,7 @@ data class Match(
     val roomCode: String,
     val seed: Long,
     val difficulty: Difficulty,
+    val gameType: String = "sudoku",
     val status: MatchStatus,
     val hostId: String,
     val guestId: String? = null,

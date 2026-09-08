@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,7 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.zincstate.playmatics.ui.theme.AccentBlue
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -39,6 +40,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    gameType: String? = null,
     onBack: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -48,9 +50,15 @@ fun SettingsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { 
-                    Text("Settings", fontWeight = FontWeight.SemiBold, fontSize = 20.sp) 
+                    Text(
+                        text = "playmatics.",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
+                        letterSpacing = (-0.5).sp
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -130,6 +138,31 @@ fun SettingsScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+            
+            // Rules Section (if gameType is provided)
+            if (gameType != null) {
+                val game = com.zincstate.playmatics.domain.engine.GameType.fromKey(gameType)
+                SectionHeader("How to Play")
+                Text(
+                    text = game.displayName,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = game.description,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 12.dp)
+                )
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
             
             // Game Settings
             SectionHeader("Game Settings")

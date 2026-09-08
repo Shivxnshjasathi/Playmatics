@@ -1,6 +1,8 @@
 package com.zincstate.playmatics.domain.model
 
 import com.zincstate.playmatics.domain.engine.Difficulty
+import com.zincstate.playmatics.domain.engine.GameType
+import com.zincstate.playmatics.domain.engine.VariantMetadata
 
 /**
  * Complete UI state for a single-player Sudoku game.
@@ -8,6 +10,7 @@ import com.zincstate.playmatics.domain.engine.Difficulty
 data class GameState(
     val seed: Long = 0L,
     val difficulty: Difficulty = Difficulty.NORMAL,
+    val gameType: GameType = GameType.SUDOKU,
     /** Current board: 0 = empty, 1-9 = digit. */
     val board: Array<IntArray> = Array(9) { IntArray(9) },
     /** The original given cells (immutable clues). */
@@ -33,7 +36,9 @@ data class GameState(
     /** Whether the puzzle is still being generated. */
     val isLoading: Boolean = true,
     /** Saved puzzle ID in Room (null for new games). */
-    val savedPuzzleId: Long? = null
+    val savedPuzzleId: Long? = null,
+    /** Variant-specific metadata (cages, regions, markers, etc.). */
+    val variantMetadata: VariantMetadata? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

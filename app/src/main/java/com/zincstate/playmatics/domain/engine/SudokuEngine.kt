@@ -8,8 +8,12 @@ import kotlin.random.Random
  *
  * Every public function is free of Android dependencies and safe to call
  * from any thread (no I/O, no shared mutable state).
+ *
+ * Also serves as the [PuzzleEngine] for classic [GameType.SUDOKU].
  */
-object SudokuEngine {
+object SudokuEngine : PuzzleEngine {
+
+    override val gameType: GameType = GameType.SUDOKU
 
     private const val SIZE = 9
     private const val BOX = 3
@@ -26,7 +30,7 @@ object SudokuEngine {
      * 1. Fills a complete valid grid using backtracking with shuffled candidates.
      * 2. Removes [Difficulty.cellsToRemove] cells while preserving uniqueness.
      */
-    fun generate(seed: Long, difficulty: Difficulty): SudokuPuzzle {
+    override fun generate(seed: Long, difficulty: Difficulty): SudokuPuzzle {
         val rng = Random(seed)
         val solution = Array(SIZE) { IntArray(SIZE) }
         fillBoard(solution, rng)
@@ -38,7 +42,8 @@ object SudokuEngine {
             seed = seed,
             difficulty = difficulty,
             givenCells = puzzle,
-            solution = solution
+            solution = solution,
+            gameType = GameType.SUDOKU
         )
     }
 
@@ -47,6 +52,14 @@ object SudokuEngine {
      * any Sudoku constraint (row, column, 3×3 box) on the current [board].
      * Empty cells (0) in peers are ignored.
      */
+    override fun isValidPlacement(
+        board: Array<IntArray>,
+        row: Int,
+        col: Int,
+        value: Int,
+        metadata: VariantMetadata?
+    ): Boolean = isValidPlacement(board, row, col, value)
+
     fun isValidPlacement(board: Array<IntArray>, row: Int, col: Int, value: Int): Boolean {
         if (value == 0) return true
         // Row check
@@ -74,6 +87,14 @@ object SudokuEngine {
      * Returns the set of cell coordinates that conflict with placing
      * [value] at ([row], [col]) on the current [board].
      */
+    override fun conflictingCells(
+        board: Array<IntArray>,
+        row: Int,
+        col: Int,
+        value: Int,
+        metadata: VariantMetadata?
+    ): Set<Pair<Int, Int>> = conflictingCells(board, row, col, value)
+
     fun conflictingCells(
         board: Array<IntArray>,
         row: Int,
@@ -108,7 +129,7 @@ object SudokuEngine {
      * Counts cells in [board] that are filled AND match the [solution].
      * This is the canonical progress metric: only correct cells count.
      */
-    fun countCorrectCells(board: Array<IntArray>, solution: Array<IntArray>): Int {
+    override fun countCorrectCells(board: Array<IntArray>, solution: Array<IntArray>): Int {
         var count = 0
         for (r in 0 until SIZE) {
             for (c in 0 until SIZE) {

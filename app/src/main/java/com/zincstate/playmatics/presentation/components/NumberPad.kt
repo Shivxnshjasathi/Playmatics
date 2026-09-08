@@ -7,7 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Backspace
+import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EditOff
 import androidx.compose.material3.Icon
@@ -66,7 +66,7 @@ fun NumberPad(
                 modifier = Modifier.size(56.dp),
                 shape = CircleShape
             ) {
-                Icon(Icons.Outlined.Backspace, contentDescription = "Erase", modifier = Modifier.size(28.dp))
+                Icon(Icons.AutoMirrored.Outlined.Backspace, contentDescription = "Erase", modifier = Modifier.size(28.dp))
             }
 
             Spacer(modifier = Modifier.width(32.dp))

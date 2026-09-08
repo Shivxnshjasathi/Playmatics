@@ -7,13 +7,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,7 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.zincstate.playmatics.presentation.components.DualProgressBar
 import com.zincstate.playmatics.presentation.components.MatchResult
 import com.zincstate.playmatics.presentation.components.NumberPad
@@ -42,52 +48,37 @@ fun MultiplayerMatchScreen(
     matchId: String,
     seed: Long,
     difficulty: String,
+    gameType: String,
     onHome: () -> Unit,
+    onSettings: () -> Unit,
     viewModel: MultiplayerMatchViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(matchId) {
-        viewModel.initMatch(matchId, seed, difficulty)
+        viewModel.initMatch(matchId, seed, difficulty, gameType)
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "1v1",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Icon(
-                            Icons.Filled.Timer,
-                            contentDescription = "Timer",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            formatTime(state.elapsedSeconds),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                        if (!state.isOpponentOnline && state.opponentDisconnectSeconds > 0) {
-                            Icon(
-                                Icons.Filled.WifiOff,
-                                contentDescription = "Opponent disconnected",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                "${state.opponentDisconnectSeconds}s",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
+                    Text(
+                        text = "playmatics.",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
+                        letterSpacing = (-0.5).sp
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onHome) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onSettings) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -116,6 +107,52 @@ fun MultiplayerMatchScreen(
                     .padding(horizontal = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "1v1 MATCH",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (!state.isOpponentOnline && state.opponentDisconnectSeconds > 0) {
+                            Icon(
+                                Icons.Filled.WifiOff,
+                                contentDescription = "Opponent disconnected",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                "${state.opponentDisconnectSeconds}s",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                        }
+                        
+                        Icon(
+                            Icons.Filled.Timer,
+                            contentDescription = "Timer",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            formatTime(state.elapsedSeconds),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
                 // Progress bars
                 DualProgressBar(
                     yourProgress = state.yourProgress,
@@ -134,6 +171,7 @@ fun MultiplayerMatchScreen(
                     conflictCells = state.conflictCells,
                     pencilNotes = state.pencilNotes,
                     highlightMistakes = true,
+                    variantMetadata = state.variantMetadata,
                     onCellClick = viewModel::selectCell,
                     modifier = Modifier.fillMaxWidth()
                 )

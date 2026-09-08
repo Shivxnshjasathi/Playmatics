@@ -14,7 +14,7 @@ interface MatchRepository {
     suspend fun ensureAuthenticated(): String
 
     /** Create a new room. Returns the Match. */
-    suspend fun createRoom(difficulty: Difficulty, seed: Long, roomCode: String): Match
+    suspend fun createRoom(difficulty: Difficulty, seed: Long, roomCode: String, gameType: String): Match
 
     /** Join an existing room by code. Returns the updated Match. */
     suspend fun joinRoom(roomCode: String): Match

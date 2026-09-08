@@ -28,6 +28,7 @@ data class WaitingLobbyUiState(
     val roomCode: String = "",
     val difficulty: Difficulty = Difficulty.NORMAL,
     val seed: Long = 0L,
+    val gameType: String = "sudoku",
     val isWaiting: Boolean = true,
     val error: String? = null
 )
@@ -42,8 +43,8 @@ data class JoinRoomUiState(
 
 sealed class LobbyEvent {
     data class RoomCreated(val matchId: String, val roomCode: String) : LobbyEvent()
-    data class MatchStarted(val matchId: String, val seed: Long, val difficulty: String) : LobbyEvent()
-    data class JoinSuccess(val matchId: String, val seed: Long, val difficulty: String) : LobbyEvent()
+    data class MatchStarted(val matchId: String, val seed: Long, val difficulty: String, val gameType: String) : LobbyEvent()
+    data class JoinSuccess(val matchId: String, val seed: Long, val difficulty: String, val gameType: String) : LobbyEvent()
     data class Error(val message: String) : LobbyEvent()
 }
 
@@ -76,7 +77,7 @@ class LobbyViewModel @Inject constructor(
         _createState.update { it.copy(difficulty = difficulty) }
     }
 
-    fun createRoom() {
+    fun createRoom(gameType: String) {
         viewModelScope.launch {
             _createState.update { it.copy(isCreating = true, error = null) }
             try {
@@ -84,13 +85,14 @@ class LobbyViewModel @Inject constructor(
                 val seed = Random.nextLong()
                 val roomCode = generateRoomCode()
 
-                val match = matchRepository.createRoom(difficulty, seed, roomCode)
+                val match = matchRepository.createRoom(difficulty, seed, roomCode, gameType)
 
                 _waitingState.value = WaitingLobbyUiState(
                     matchId = match.id,
                     roomCode = match.roomCode,
                     difficulty = difficulty,
-                    seed = seed
+                    seed = seed,
+                    gameType = gameType
                 )
 
                 _createState.update { it.copy(isCreating = false) }
@@ -114,7 +116,8 @@ class LobbyViewModel @Inject constructor(
                             LobbyEvent.MatchStarted(
                                 match.id,
                                 match.seed,
-                                match.difficulty.name
+                                match.difficulty.name,
+                                match.gameType
                             )
                         )
                     }
@@ -176,7 +179,8 @@ class LobbyViewModel @Inject constructor(
                     LobbyEvent.JoinSuccess(
                         match.id,
                         match.seed,
-                        match.difficulty.name
+                        match.difficulty.name,
+                        match.gameType
                     )
                 )
             } catch (e: Exception) {

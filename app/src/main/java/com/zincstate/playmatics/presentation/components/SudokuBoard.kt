@@ -37,6 +37,9 @@ import com.zincstate.playmatics.ui.theme.CellSelected
 import com.zincstate.playmatics.ui.theme.CellUserCorrect
 import com.zincstate.playmatics.ui.theme.CellUserIncorrect
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.zincstate.playmatics.domain.engine.VariantMetadata
 
 /**
  * 9×9 Sudoku board with Canvas grid lines and Composable cells.
@@ -50,7 +53,8 @@ fun SudokuBoard(
     pencilNotes: Map<Int, Set<Int>>,
     highlightMistakes: Boolean,
     onCellClick: (row: Int, col: Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    variantMetadata: VariantMetadata? = null
 ) {
     val onSurface = MaterialTheme.colorScheme.onSurface
     val surface = MaterialTheme.colorScheme.surface
@@ -73,6 +77,28 @@ fun SudokuBoard(
             val thinLine = 1.dp.toPx()
             val thickLine = 2.5.dp.toPx()
 
+            // Pre-draw Variant Overlays (Background)
+            when (variantMetadata) {
+                is VariantMetadata.WindokuWindows -> {
+                    val windowColor = primary.copy(alpha = 0.15f)
+                    for (window in variantMetadata.windows) {
+                        for (cell in window) {
+                            drawRect(
+                                color = windowColor,
+                                topLeft = Offset(cell.second * cellSizePx, cell.first * cellSizePx),
+                                size = androidx.compose.ui.geometry.Size(cellSizePx, cellSizePx)
+                            )
+                        }
+                    }
+                }
+                is VariantMetadata.DiagonalMarker -> {
+                    val diagColor = primary.copy(alpha = 0.2f)
+                    drawLine(diagColor, Offset.Zero, Offset(boardSizePx, boardSizePx), strokeWidth = thickLine * 2)
+                    drawLine(diagColor, Offset(boardSizePx, 0f), Offset(0f, boardSizePx), strokeWidth = thickLine * 2)
+                }
+                else -> {}
+            }
+
             // Cell borders (thin lines)
             for (i in 1 until 9) {
                 if (i % 3 != 0) {
@@ -93,22 +119,27 @@ fun SudokuBoard(
                 }
             }
 
-            // Block borders (thick lines) - only inner lines (3, 6)
-            for (i in 3..6 step 3) {
-                // Vertical
-                drawLine(
-                    color = onSurface,
-                    start = Offset(i * cellSizePx, 0f),
-                    end = Offset(i * cellSizePx, boardSizePx),
-                    strokeWidth = thickLine
-                )
-                // Horizontal
-                drawLine(
-                    color = onSurface,
-                    start = Offset(0f, i * cellSizePx),
-                    end = Offset(boardSizePx, i * cellSizePx),
-                    strokeWidth = thickLine
-                )
+            // Block borders (thick lines) - only if not jigsaw
+            if (variantMetadata !is VariantMetadata.JigsawRegions) {
+                for (i in 3..6 step 3) {
+                    drawLine(onSurface, Offset(i * cellSizePx, 0f), Offset(i * cellSizePx, boardSizePx), strokeWidth = thickLine)
+                    drawLine(onSurface, Offset(0f, i * cellSizePx), Offset(boardSizePx, i * cellSizePx), strokeWidth = thickLine)
+                }
+            } else {
+                // Jigsaw thick borders
+                for (r in 0 until 9) {
+                    for (c in 0 until 9) {
+                        val region = variantMetadata.regionMap[r][c]
+                        val x = c * cellSizePx
+                        val y = r * cellSizePx
+                        if (c < 8 && variantMetadata.regionMap[r][c + 1] != region) {
+                            drawLine(onSurface, Offset(x + cellSizePx, y), Offset(x + cellSizePx, y + cellSizePx), strokeWidth = thickLine)
+                        }
+                        if (r < 8 && variantMetadata.regionMap[r + 1][c] != region) {
+                            drawLine(onSurface, Offset(x, y + cellSizePx), Offset(x + cellSizePx, y + cellSizePx), strokeWidth = thickLine)
+                        }
+                    }
+                }
             }
         }
 
@@ -169,16 +200,32 @@ fun SudokuBoard(
                         },
                     contentAlignment = Alignment.Center
                 ) {
+                    // Odd/Even overlays
+                    if (variantMetadata is VariantMetadata.OddEvenMap) {
+                        val isOdd = variantMetadata.parityMap[row][col]
+                        Box(
+                            modifier = Modifier
+                                .size(cellSizeDp * 0.7f)
+                                .clip(if (isOdd) CircleShape else RoundedCornerShape(4.dp))
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                        )
+                    }
+
                     if (value != 0) {
+                        val displayStr = if (variantMetadata is VariantMetadata.WordokuMapping) {
+                            variantMetadata.letterMap[value]?.toString() ?: value.toString()
+                        } else {
+                            value.toString()
+                        }
                         Text(
-                            text = value.toString(),
+                            text = displayStr,
                             color = textColor,
                             fontSize = (cellSizeDp.value * 0.5f).sp,
                             fontWeight = if (state == CellState.GIVEN) FontWeight.Bold else FontWeight.Medium,
                             textAlign = TextAlign.Center
                         )
                     } else if (notes.isNotEmpty()) {
-                        PencilNotesGrid(notes = notes, cellSize = cellSizeDp)
+                        PencilNotesGrid(notes = notes, cellSize = cellSizeDp, variantMetadata = variantMetadata)
                     }
                 }
             }
@@ -187,7 +234,7 @@ fun SudokuBoard(
 }
 
 @Composable
-private fun PencilNotesGrid(notes: Set<Int>, cellSize: Dp) {
+private fun PencilNotesGrid(notes: Set<Int>, cellSize: Dp, variantMetadata: VariantMetadata?) {
     val noteSize = cellSize / 3
     val noteFontSize = (noteSize.value * 0.55f).sp
     val noteColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -196,8 +243,13 @@ private fun PencilNotesGrid(notes: Set<Int>, cellSize: Dp) {
         for (n in notes) {
             val noteRow = (n - 1) / 3
             val noteCol = (n - 1) % 3
+            val displayStr = if (variantMetadata is VariantMetadata.WordokuMapping) {
+                variantMetadata.letterMap[n]?.toString() ?: n.toString()
+            } else {
+                n.toString()
+            }
             Text(
-                text = n.toString(),
+                text = displayStr,
                 color = noteColor,
                 fontSize = noteFontSize,
                 fontWeight = FontWeight.Normal,

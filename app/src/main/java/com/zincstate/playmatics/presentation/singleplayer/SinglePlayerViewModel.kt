@@ -3,6 +3,8 @@ package com.zincstate.playmatics.presentation.singleplayer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zincstate.playmatics.domain.engine.Difficulty
+import com.zincstate.playmatics.domain.engine.EngineFactory
+import com.zincstate.playmatics.domain.engine.GameType
 import com.zincstate.playmatics.domain.engine.SudokuEngine
 import com.zincstate.playmatics.domain.model.CellState
 import com.zincstate.playmatics.domain.model.GameState
@@ -40,30 +42,34 @@ class SinglePlayerViewModel @Inject constructor(
 
     private var timerJob: Job? = null
     private var saveJob: Job? = null
+    private var currentEngine = EngineFactory.getEngine(GameType.SUDOKU)
 
-    fun initGame(seed: Long, difficultyName: String) {
+    fun initGame(seed: Long, difficultyName: String, gameTypeName: String = "sudoku") {
         val difficulty = try { Difficulty.valueOf(difficultyName) } catch (_: Exception) { Difficulty.NORMAL }
+        val gameType = GameType.fromKey(gameTypeName)
+        currentEngine = EngineFactory.getEngine(gameType)
 
         viewModelScope.launch {
-            // Check for saved puzzle with same seed
             // Generate puzzle on background thread
             val puzzle = withContext(Dispatchers.Default) {
-                SudokuEngine.generate(seed, difficulty)
+                currentEngine.generate(seed, difficulty)
             }
 
             val board = puzzle.givenCells.map { it.copyOf() }.toTypedArray()
             val cellStates = computeCellStates(board, puzzle.givenCells, puzzle.solution)
-            val correctCount = SudokuEngine.countCorrectCells(board, puzzle.solution)
+            val correctCount = currentEngine.countCorrectCells(board, puzzle.solution)
 
             _state.value = GameState(
                 seed = seed,
                 difficulty = difficulty,
+                gameType = gameType,
                 board = board,
                 givenCells = puzzle.givenCells,
                 solution = puzzle.solution,
                 cellStates = cellStates,
                 correctCount = correctCount,
-                isLoading = false
+                isLoading = false,
+                variantMetadata = puzzle.variantMetadata
             )
 
             startTimer()
@@ -74,12 +80,12 @@ class SinglePlayerViewModel @Inject constructor(
         viewModelScope.launch {
             val difficulty = savedPuzzle.difficulty
             val puzzle = withContext(Dispatchers.Default) {
-                SudokuEngine.generate(savedPuzzle.seed, difficulty)
+                currentEngine.generate(savedPuzzle.seed, difficulty)
             }
 
             val board = boardFromString(savedPuzzle.currentBoardSnapshot)
             val cellStates = computeCellStates(board, puzzle.givenCells, puzzle.solution)
-            val correctCount = SudokuEngine.countCorrectCells(board, puzzle.solution)
+            val correctCount = currentEngine.countCorrectCells(board, puzzle.solution)
 
             _state.value = GameState(
                 seed = savedPuzzle.seed,
@@ -92,7 +98,8 @@ class SinglePlayerViewModel @Inject constructor(
                 cellStates = cellStates,
                 correctCount = correctCount,
                 isLoading = false,
-                savedPuzzleId = savedPuzzle.id
+                savedPuzzleId = savedPuzzle.id,
+                variantMetadata = puzzle.variantMetadata
             )
 
             startTimer()
@@ -133,10 +140,13 @@ class SinglePlayerViewModel @Inject constructor(
             val updatedNotes = current.pencilNotes.toMutableMap()
             updatedNotes.remove(row * 9 + col)
 
-            val conflicts = SudokuEngine.conflictingCells(newBoard, row, col, digit)
+            val conflicts = currentEngine.conflictingCells(
+                newBoard, row, col, digit, current.variantMetadata
+            )
             val cellStates = computeCellStates(newBoard, current.givenCells, current.solution)
-            val correctCount = SudokuEngine.countCorrectCells(newBoard, current.solution)
-            val isCompleted = correctCount == 81
+            val correctCount = currentEngine.countCorrectCells(newBoard, current.solution)
+            val totalCells = current.solution.sumOf { r -> r.count { it != 0 } }
+            val isCompleted = correctCount == totalCells
 
             _state.update {
                 it.copy(
@@ -171,7 +181,7 @@ class SinglePlayerViewModel @Inject constructor(
         updatedNotes.remove(row * 9 + col)
 
         val cellStates = computeCellStates(newBoard, current.givenCells, current.solution)
-        val correctCount = SudokuEngine.countCorrectCells(newBoard, current.solution)
+        val correctCount = currentEngine.countCorrectCells(newBoard, current.solution)
 
         _state.update {
             it.copy(
@@ -272,8 +282,8 @@ class SinglePlayerViewModel @Inject constructor(
         given: Array<IntArray>,
         solution: Array<IntArray>
     ): Array<Array<CellState>> {
-        return Array(9) { r ->
-            Array(9) { c ->
+        return Array(board.size) { r ->
+            Array(board[r].size) { c ->
                 when {
                     given[r][c] != 0 -> CellState.GIVEN
                     board[r][c] == 0 -> CellState.EMPTY

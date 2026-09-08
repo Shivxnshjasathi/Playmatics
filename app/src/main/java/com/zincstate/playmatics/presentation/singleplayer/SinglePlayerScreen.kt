@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,7 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.zincstate.playmatics.presentation.components.NumberPad
 import com.zincstate.playmatics.presentation.components.ResultModal
 import com.zincstate.playmatics.presentation.components.MatchResult
@@ -40,7 +44,9 @@ import com.zincstate.playmatics.presentation.components.SudokuBoard
 fun SinglePlayerScreen(
     seed: Long,
     difficulty: String,
+    gameType: String,
     onBack: () -> Unit,
+    onSettings: () -> Unit,
     viewModel: SinglePlayerViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -48,42 +54,29 @@ fun SinglePlayerScreen(
     val hapticsEnabled by viewModel.hapticsEnabled.collectAsState()
 
     LaunchedEffect(seed, difficulty) {
-        viewModel.initGame(seed, difficulty)
+        viewModel.initGame(seed, difficulty, gameType)
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            difficulty,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Icon(
-                            Icons.Filled.Timer,
-                            contentDescription = "Timer",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(end = 4.dp)
-                        )
-                        Text(
-                            formatTime(state.elapsedSeconds),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(
-                            "${state.correctCount}/81",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    Text(
+                        text = "playmatics.",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
+                        letterSpacing = (-0.5).sp
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onSettings) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -112,7 +105,42 @@ fun SinglePlayerScreen(
                     .padding(horizontal = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        difficulty,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.Timer,
+                            contentDescription = "Timer",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(end = 4.dp).size(18.dp)
+                        )
+                        Text(
+                            formatTime(state.elapsedSeconds),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    Text(
+                        "${state.correctCount}/81",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
 
                 SudokuBoard(
                     board = state.board,
@@ -121,6 +149,7 @@ fun SinglePlayerScreen(
                     conflictCells = state.conflictCells,
                     pencilNotes = state.pencilNotes,
                     highlightMistakes = highlightMistakes,
+                    variantMetadata = state.variantMetadata,
                     onCellClick = viewModel::selectCell,
                     modifier = Modifier.fillMaxWidth()
                 )

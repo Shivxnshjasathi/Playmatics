@@ -16,7 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.SentimentDissatisfied
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -73,7 +73,7 @@ fun ResultModal(
                     val (icon, tint, title) = when (result) {
                         MatchResult.WIN -> Triple(Icons.Filled.EmojiEvents, WinGreen, "You Won!")
                         MatchResult.LOSS -> Triple(Icons.Filled.SentimentDissatisfied, LossRed, "You Lost")
-                        MatchResult.FORFEIT -> Triple(Icons.Filled.ExitToApp, MaterialTheme.colorScheme.onSurfaceVariant, "Opponent Left")
+                        MatchResult.FORFEIT -> Triple(Icons.AutoMirrored.Filled.ExitToApp, MaterialTheme.colorScheme.onSurfaceVariant, "Opponent Left")
                     }
 
                     Icon(

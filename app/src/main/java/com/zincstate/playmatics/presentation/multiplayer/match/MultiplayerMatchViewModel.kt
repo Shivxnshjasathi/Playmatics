@@ -3,7 +3,9 @@ package com.zincstate.playmatics.presentation.multiplayer.match
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zincstate.playmatics.domain.engine.Difficulty
-import com.zincstate.playmatics.domain.engine.SudokuEngine
+import com.zincstate.playmatics.domain.engine.EngineFactory
+import com.zincstate.playmatics.domain.engine.GameType
+import com.zincstate.playmatics.domain.engine.VariantMetadata
 import com.zincstate.playmatics.domain.model.CellState
 import com.zincstate.playmatics.domain.repository.MatchRepository
 import com.zincstate.playmatics.domain.repository.PuzzleRepository
@@ -35,7 +37,9 @@ data class MultiplayerUiState(
     val isLoading: Boolean = true,
     val matchResult: MatchResult? = null,
     val isOpponentOnline: Boolean = true,
-    val opponentDisconnectSeconds: Int = 0
+    val opponentDisconnectSeconds: Int = 0,
+    val gameType: GameType = GameType.SUDOKU,
+    val variantMetadata: VariantMetadata? = null
 ) {
     val yourProgress: Float get() = correctCount / 81f
     val opponentProgress: Float get() = opponentCorrectCount / 81f
@@ -52,7 +56,8 @@ data class MultiplayerUiState(
                 matchResult == other.matchResult &&
                 isNotesMode == other.isNotesMode &&
                 conflictCells == other.conflictCells &&
-                isOpponentOnline == other.isOpponentOnline
+                isOpponentOnline == other.isOpponentOnline &&
+                gameType == other.gameType
     }
 
     override fun hashCode(): Int = correctCount * 31 + opponentCorrectCount
@@ -71,19 +76,22 @@ class MultiplayerMatchViewModel @Inject constructor(
     private var disconnectTimerJob: Job? = null
     private var matchId: String = ""
     private var lastBroadcastedCount = 0
+    private var currentEngine = EngineFactory.getEngine(GameType.SUDOKU)
 
-    fun initMatch(matchId: String, seed: Long, difficultyName: String) {
+    fun initMatch(matchId: String, seed: Long, difficultyName: String, gameTypeName: String = "sudoku") {
         this.matchId = matchId
         val difficulty = try { Difficulty.valueOf(difficultyName) } catch (_: Exception) { Difficulty.NORMAL }
+        val gameType = GameType.fromKey(gameTypeName)
+        currentEngine = EngineFactory.getEngine(gameType)
 
         viewModelScope.launch {
             val puzzle = withContext(Dispatchers.Default) {
-                SudokuEngine.generate(seed, difficulty)
+                currentEngine.generate(seed, difficulty)
             }
 
             val board = puzzle.givenCells.map { it.copyOf() }.toTypedArray()
             val cellStates = computeCellStates(board, puzzle.givenCells, puzzle.solution)
-            val correctCount = SudokuEngine.countCorrectCells(board, puzzle.solution)
+            val correctCount = currentEngine.countCorrectCells(board, puzzle.solution)
 
             _state.value = MultiplayerUiState(
                 board = board,
@@ -91,7 +99,9 @@ class MultiplayerMatchViewModel @Inject constructor(
                 solution = puzzle.solution,
                 cellStates = cellStates,
                 correctCount = correctCount,
-                isLoading = false
+                isLoading = false,
+                gameType = gameType,
+                variantMetadata = puzzle.variantMetadata
             )
 
             // Join the realtime channel
@@ -141,9 +151,11 @@ class MultiplayerMatchViewModel @Inject constructor(
             val newNotes = current.pencilNotes.toMutableMap()
             newNotes.remove(row * 9 + col)
 
-            val conflicts = SudokuEngine.conflictingCells(newBoard, row, col, digit)
+            val conflicts = currentEngine.conflictingCells(
+                newBoard, row, col, digit, current.variantMetadata
+            )
             val cellStates = computeCellStates(newBoard, current.givenCells, current.solution)
-            val correctCount = SudokuEngine.countCorrectCells(newBoard, current.solution)
+            val correctCount = currentEngine.countCorrectCells(newBoard, current.solution)
 
             _state.update {
                 it.copy(
@@ -164,7 +176,8 @@ class MultiplayerMatchViewModel @Inject constructor(
             }
 
             // Check for completion
-            if (correctCount == 81) {
+            val totalCells = current.solution.sumOf { r -> r.count { it != 0 } }
+            if (correctCount == totalCells) {
                 onMatchCompleted()
             }
         }
@@ -183,7 +196,7 @@ class MultiplayerMatchViewModel @Inject constructor(
         newNotes.remove(row * 9 + col)
 
         val cellStates = computeCellStates(newBoard, current.givenCells, current.solution)
-        val correctCount = SudokuEngine.countCorrectCells(newBoard, current.solution)
+        val correctCount = currentEngine.countCorrectCells(newBoard, current.solution)
 
         _state.update {
             it.copy(
@@ -246,7 +259,8 @@ class MultiplayerMatchViewModel @Inject constructor(
                     _state.update { it.copy(opponentCorrectCount = progress.solvedCount) }
 
                     // Check if opponent completed (they'll call complete_match, but update UI)
-                    if (progress.solvedCount == 81 && _state.value.matchResult == null) {
+                    val totalCells = _state.value.solution.sumOf { r -> r.count { it != 0 } }
+                    if (progress.solvedCount == totalCells && _state.value.matchResult == null) {
                         // Wait briefly for the RPC result
                         delay(500)
                         if (_state.value.matchResult == null) {
@@ -301,8 +315,8 @@ class MultiplayerMatchViewModel @Inject constructor(
         given: Array<IntArray>,
         solution: Array<IntArray>
     ): Array<Array<CellState>> {
-        return Array(9) { r ->
-            Array(9) { c ->
+        return Array(board.size) { r ->
+            Array(board[r].size) { c ->
                 when {
                     given[r][c] != 0 -> CellState.GIVEN
                     board[r][c] == 0 -> CellState.EMPTY

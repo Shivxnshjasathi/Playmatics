@@ -12,6 +12,7 @@ data class MatchDto(
     @SerialName("room_code") val roomCode: String = "",
     val seed: Long = 0L,
     val difficulty: String = "",
+    @SerialName("game_type") val gameType: String = "sudoku",
     val status: String = "waiting",
     @SerialName("host_id") val hostId: String = "",
     @SerialName("guest_id") val guestId: String? = null,

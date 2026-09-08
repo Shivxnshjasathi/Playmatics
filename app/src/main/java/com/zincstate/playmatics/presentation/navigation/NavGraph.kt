@@ -15,6 +15,7 @@ import com.zincstate.playmatics.presentation.settings.SettingsScreen
 import com.zincstate.playmatics.presentation.singleplayer.SinglePlayerScreen
 import com.zincstate.playmatics.presentation.stats.StatsScreen
 import com.zincstate.playmatics.presentation.about.AboutScreen
+import com.zincstate.playmatics.presentation.comingsoon.ComingSoonScreen
 
 @Composable
 fun NavGraph(
@@ -29,11 +30,11 @@ fun NavGraph(
     ) {
         composable<Home> {
             HomeScreen(
-                onPlaySingle = { seed, difficulty ->
-                    navController.navigate(SinglePlayer(seed, difficulty.name))
+                onPlaySingle = { seed, difficulty, gameType ->
+                    navController.navigate(SinglePlayer(seed, difficulty.name, gameType))
                 },
-                onCreateRoom = {
-                    navController.navigate(CreateRoom)
+                onCreateRoom = { gameType ->
+                    navController.navigate(CreateRoom(gameType))
                 },
                 onJoinRoom = {
                     navController.navigate(JoinRoom)
@@ -41,11 +42,14 @@ fun NavGraph(
                 onStats = {
                     navController.navigate(Stats)
                 },
-                onSettings = {
-                    navController.navigate(Settings)
+                onSettings = { gameType ->
+                    navController.navigate(Settings(gameType))
                 },
                 onAbout = {
                     navController.navigate(About)
+                },
+                onComingSoonClick = { gameName ->
+                    navController.navigate(ComingSoon(gameName))
                 },
                 connectivityObserver = connectivityObserver
             )
@@ -56,14 +60,18 @@ fun NavGraph(
             SinglePlayerScreen(
                 seed = route.seed,
                 difficulty = route.difficulty,
-                onBack = { navController.popBackStack() }
+                gameType = route.gameType,
+                onBack = { navController.popBackStack() },
+                onSettings = { navController.navigate(Settings(route.gameType)) }
             )
         }
 
-        composable<CreateRoom> {
+        composable<CreateRoom> { backStackEntry ->
+            val route = backStackEntry.toRoute<CreateRoom>()
             CreateRoomScreen(
+                gameType = route.gameType,
                 onRoomCreated = { matchId, roomCode ->
-                    navController.navigate(WaitingLobby(matchId, roomCode)) {
+                    navController.navigate(WaitingLobby(matchId, roomCode, route.gameType)) {
                         popUpTo<CreateRoom> { inclusive = true }
                     }
                 },
@@ -73,8 +81,8 @@ fun NavGraph(
 
         composable<JoinRoom> {
             JoinRoomScreen(
-                onMatchJoined = { matchId, seed, difficulty ->
-                    navController.navigate(MultiplayerMatch(matchId, seed, difficulty)) {
+                onMatchJoined = { matchId, seed, difficulty, gameType ->
+                    navController.navigate(MultiplayerMatch(matchId, seed, difficulty, gameType)) {
                         popUpTo<Home>()
                     }
                 },
@@ -87,8 +95,8 @@ fun NavGraph(
             WaitingLobbyScreen(
                 matchId = route.matchId,
                 roomCode = route.roomCode,
-                onMatchStarted = { matchId, seed, difficulty ->
-                    navController.navigate(MultiplayerMatch(matchId, seed, difficulty)) {
+                onMatchStarted = { matchId, seed, difficulty, gameType ->
+                    navController.navigate(MultiplayerMatch(matchId, seed, difficulty, gameType)) {
                         popUpTo<Home>()
                     }
                 },
@@ -102,7 +110,9 @@ fun NavGraph(
                 matchId = route.matchId,
                 seed = route.seed,
                 difficulty = route.difficulty,
-                onHome = { navController.popBackStack(Home, false) }
+                gameType = route.gameType,
+                onHome = { navController.popBackStack(Home, false) },
+                onSettings = { navController.navigate(Settings(route.gameType)) }
             )
         }
 
@@ -110,14 +120,24 @@ fun NavGraph(
             StatsScreen(onBack = { navController.popBackStack() })
         }
 
-        composable<Settings> {
+        composable<Settings> { backStackEntry ->
+            val route = backStackEntry.toRoute<Settings>()
             SettingsScreen(
+                gameType = route.gameType,
                 onBack = { navController.popBackStack() }
             )
         }
 
         composable<About> {
             AboutScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<ComingSoon> { backStackEntry ->
+            val route = backStackEntry.toRoute<ComingSoon>()
+            ComingSoonScreen(
+                gameName = route.gameName,
                 onBack = { navController.popBackStack() }
             )
         }
