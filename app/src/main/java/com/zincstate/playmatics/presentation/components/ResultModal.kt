@@ -43,6 +43,7 @@ fun ResultModal(
     yourTime: String,
     opponentTime: String? = null,
     onRematch: (() -> Unit)? = null,
+    onNextLevel: (() -> Unit)? = null,
     onHome: () -> Unit
 ) {
     if (!visible) return
@@ -58,7 +59,7 @@ fun ResultModal(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                elevation = CardDefaults.cardElevation(0.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -114,6 +115,17 @@ fun ResultModal(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Buttons
+                    if (onNextLevel != null) {
+                        Button(
+                            onClick = onNextLevel,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Next Level")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
                     if (onRematch != null) {
                         Button(
                             onClick = onRematch,

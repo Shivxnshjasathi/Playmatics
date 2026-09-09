@@ -38,7 +38,11 @@ data class GameState(
     /** Saved puzzle ID in Room (null for new games). */
     val savedPuzzleId: Long? = null,
     /** Variant-specific metadata (cages, regions, markers, etc.). */
-    val variantMetadata: VariantMetadata? = null
+    val variantMetadata: VariantMetadata? = null,
+    /** Number of mistakes made so far. */
+    val mistakesMade: Int = 0,
+    /** True if the user lost the game due to mistake limit. */
+    val hasLost: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

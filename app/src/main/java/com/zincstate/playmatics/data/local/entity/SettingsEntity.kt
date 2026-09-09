@@ -9,8 +9,10 @@ data class SettingsEntity(
     val id: Int = 1,
     /** null = follow system, true = dark, false = light */
     val isDarkTheme: Boolean? = null,
+    val themePalette: String = "Sunset",
     val haptics: Boolean = true,
     val highlightMistakes: Boolean = true,
+    val mistakeLimitEnabled: Boolean = false,
     val musicEnabled: Boolean = false,
     val sfxEnabled: Boolean = true
 )

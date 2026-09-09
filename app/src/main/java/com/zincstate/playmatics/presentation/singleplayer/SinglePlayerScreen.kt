@@ -53,6 +53,7 @@ fun SinglePlayerScreen(
     val state by viewModel.state.collectAsState()
     val highlightMistakes by viewModel.highlightMistakes.collectAsState()
     val hapticsEnabled by viewModel.hapticsEnabled.collectAsState()
+    val mistakeLimitEnabled by viewModel.mistakeLimitEnabled.collectAsState()
 
     LaunchedEffect(seed, difficulty) {
         viewModel.initGame(seed, difficulty, gameType)
@@ -62,22 +63,11 @@ fun SinglePlayerScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        text = "playmatics.",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
-                        letterSpacing = (-0.5).sp
-                    )
+                    com.zincstate.playmatics.presentation.components.PlaymaticsLogo()
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -119,6 +109,15 @@ fun SinglePlayerScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    
+                    if (mistakeLimitEnabled) {
+                        Text(
+                            "Mistakes: ${state.mistakesMade}/3",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if (state.mistakesMade >= 2) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -168,8 +167,9 @@ fun SinglePlayerScreen(
         // Completion dialog
         ResultModal(
             visible = state.isCompleted,
-            result = MatchResult.WIN,
+            result = if (state.hasLost) MatchResult.LOSS else MatchResult.WIN,
             yourTime = formatTime(state.elapsedSeconds),
+            onNextLevel = { viewModel.nextLevel() },
             onHome = onBack
         )
     }

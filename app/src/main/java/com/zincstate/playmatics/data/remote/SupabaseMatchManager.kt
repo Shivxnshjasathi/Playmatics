@@ -273,8 +273,11 @@ class SupabaseMatchManager @Inject constructor(
     /** Observe presence changes. Emits whether the opponent is currently present. */
     fun observePresenceChanges(): Flow<Boolean>? {
         val userId = currentUserId ?: return null
-        return currentChannel?.presenceDataFlow<PlayerPresence>()?.map { presences ->
-            presences.any { it.userId != userId }
+        val channel = currentChannel ?: return null
+        return kotlinx.coroutines.flow.flow {
+            channel.presenceDataFlow<PlayerPresence>().collect { presences ->
+                emit(presences.any { it.userId != userId })
+            }
         }
     }
 

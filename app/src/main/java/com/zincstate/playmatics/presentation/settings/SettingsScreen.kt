@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -42,11 +43,13 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 fun SettingsScreen(
     gameType: String? = null,
     onBack: () -> Unit,
+    onAbout: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val themeMode by viewModel.themeMode.collectAsState()
     val hapticsEnabled by viewModel.hapticsEnabled.collectAsState()
     val highlightMistakes by viewModel.highlightMistakes.collectAsState()
+    val mistakeLimitEnabled by viewModel.mistakeLimitEnabled.collectAsState()
     val musicEnabled by viewModel.musicEnabled.collectAsState()
     val sfxEnabled by viewModel.sfxEnabled.collectAsState()
 
@@ -54,13 +57,7 @@ fun SettingsScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
-                    Text(
-                        text = "playmatics.",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
-                        letterSpacing = (-0.5).sp
-                    )
+                    com.zincstate.playmatics.presentation.components.PlaymaticsLogo()
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -141,10 +138,10 @@ fun SettingsScreen(
 
             SettingToggle(
                 title = "Background Music",
-                subtitle = "Coming soon - we're finding a good track",
-                checked = false,
-                enabled = false,
-                onCheckedChange = { }
+                subtitle = "Play shuffled lo-fi beats",
+                checked = musicEnabled,
+                enabled = true,
+                onCheckedChange = viewModel::setMusicEnabled
             )
 
             SettingToggle(
@@ -185,11 +182,49 @@ fun SettingsScreen(
             SectionHeader("Game Settings")
             
             SettingToggle(
-                title = "Highlight Mistakes",
+                title = "Show Hints & Errors",
                 subtitle = "Show incorrect entries and conflicts",
                 checked = highlightMistakes,
                 onCheckedChange = viewModel::setHighlightMistakes
             )
+
+            SettingToggle(
+                title = "Mistake Limit (3)",
+                subtitle = "Game over after 3 mistakes",
+                checked = mistakeLimitEnabled,
+                onCheckedChange = viewModel::setMistakeLimitEnabled
+            )
+            
+            if (onAbout != null) {
+                Spacer(modifier = Modifier.height(24.dp))
+                SectionHeader("About")
+                
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onAbout)
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                ) {
+                    Text(
+                        text = "About Us",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Learn more about Playmatics",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

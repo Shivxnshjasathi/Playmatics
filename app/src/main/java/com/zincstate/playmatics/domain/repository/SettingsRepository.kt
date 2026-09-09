@@ -10,6 +10,8 @@ interface SettingsRepository {
     /** null = follow system, true = dark, false = light */
     fun observeThemeMode(): Flow<Boolean?>
 
+    fun observeThemePalette(): Flow<String>
+
     fun observeHapticsEnabled(): Flow<Boolean>
 
     fun observeHighlightMistakes(): Flow<Boolean>
@@ -20,6 +22,8 @@ interface SettingsRepository {
 
     suspend fun setThemeMode(isDark: Boolean?)
 
+    suspend fun setThemePalette(palette: String)
+
     suspend fun setHapticsEnabled(enabled: Boolean)
 
     suspend fun setHighlightMistakes(enabled: Boolean)
@@ -27,4 +31,7 @@ interface SettingsRepository {
     suspend fun setMusicEnabled(enabled: Boolean)
 
     suspend fun setSfxEnabled(enabled: Boolean)
+
+    fun observeMistakeLimitEnabled(): Flow<Boolean>
+    suspend fun setMistakeLimitEnabled(enabled: Boolean)
 }

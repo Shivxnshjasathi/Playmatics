@@ -41,11 +41,18 @@ class SinglePlayerViewModel @Inject constructor(
     val hapticsEnabled = settingsRepository.observeHapticsEnabled()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val mistakeLimitEnabled = settingsRepository.observeMistakeLimitEnabled()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     private var timerJob: Job? = null
     private var saveJob: Job? = null
     private var currentEngine = EngineFactory.getEngine(GameType.SUDOKU)
+    private var isInitialized = false
 
     fun initGame(seed: Long, difficultyName: String, gameTypeName: String = "sudoku") {
+        if (isInitialized) return  // already loaded — don't restart on recomposition
+        isInitialized = true
+
         val difficulty = try { Difficulty.valueOf(difficultyName) } catch (_: Exception) { Difficulty.NORMAL }
         val gameType = GameType.fromKey(gameTypeName)
         currentEngine = EngineFactory.getEngine(gameType)
@@ -100,11 +107,26 @@ class SinglePlayerViewModel @Inject constructor(
                 correctCount = correctCount,
                 isLoading = false,
                 savedPuzzleId = savedPuzzle.id,
-                variantMetadata = puzzle.variantMetadata
+                variantMetadata = puzzle.variantMetadata,
+                gameType = currentEngine.gameType
             )
 
             startTimer()
         }
+    }
+
+    fun nextLevel() {
+        val current = _state.value
+        val nextDifficulty = when (current.difficulty) {
+            Difficulty.EASY -> Difficulty.NORMAL
+            Difficulty.NORMAL -> Difficulty.HARD
+            Difficulty.HARD -> Difficulty.EXPERT
+            Difficulty.EXPERT -> Difficulty.EXPERT
+        }
+        val nextSeed = current.seed + 1L
+        
+        isInitialized = false // allow re-initialization
+        initGame(nextSeed, nextDifficulty.name, current.gameType.name)
     }
 
     fun selectCell(row: Int, col: Int) {
@@ -115,7 +137,7 @@ class SinglePlayerViewModel @Inject constructor(
         val current = _state.value
         val (row, col) = current.selectedCell ?: return
         if (current.cellStates[row][col] == CellState.GIVEN) return
-        if (current.isCompleted) return
+        if (current.isCompleted || current.hasLost) return
 
         if (current.isNotesMode) {
             // Toggle pencil note
@@ -148,6 +170,9 @@ class SinglePlayerViewModel @Inject constructor(
             val correctCount = currentEngine.countCorrectCells(newBoard, current.solution)
             val totalCells = current.solution.sumOf { r -> r.count { it != 0 } }
             val isCompleted = correctCount == totalCells
+            val isMistake = digit != current.solution[row][col]
+            val newMistakesMade = if (isMistake) current.mistakesMade + 1 else current.mistakesMade
+            val hasLost = mistakeLimitEnabled.value && newMistakesMade >= 3
 
             _state.update {
                 it.copy(
@@ -155,15 +180,20 @@ class SinglePlayerViewModel @Inject constructor(
                     cellStates = cellStates,
                     conflictCells = conflicts,
                     correctCount = correctCount,
-                    isCompleted = isCompleted,
-                    pencilNotes = updatedNotes
+                    isCompleted = isCompleted || hasLost,
+                    pencilNotes = updatedNotes,
+                    mistakesMade = newMistakesMade,
+                    hasLost = hasLost
                 )
             }
 
-            if (isCompleted) {
+            if (isCompleted && !hasLost) {
                 onPuzzleCompleted()
                 audioPlayer.playWin()
-            } else if (conflicts.isNotEmpty()) {
+            } else if (hasLost) {
+                timerJob?.cancel()
+                audioPlayer.playError()
+            } else if (conflicts.isNotEmpty() || isMistake) {
                 audioPlayer.playError()
             } else {
                 audioPlayer.playClick()
@@ -177,7 +207,7 @@ class SinglePlayerViewModel @Inject constructor(
         val current = _state.value
         val (row, col) = current.selectedCell ?: return
         if (current.cellStates[row][col] == CellState.GIVEN) return
-        if (current.isCompleted) return
+        if (current.isCompleted || current.hasLost) return
 
         val newBoard = current.board.map { it.copyOf() }.toTypedArray()
         newBoard[row][col] = 0

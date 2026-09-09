@@ -17,6 +17,10 @@ class SettingsRepositoryImpl @Inject constructor(
         return settingsDao.getSettings().map { it?.isDarkTheme }
     }
 
+    override fun observeThemePalette(): Flow<String> {
+        return settingsDao.getSettings().map { it?.themePalette ?: "Sunset Minimalist" }
+    }
+
     override fun observeHapticsEnabled(): Flow<Boolean> {
         return settingsDao.getSettings().map { it?.haptics ?: true }
     }
@@ -38,6 +42,11 @@ class SettingsRepositoryImpl @Inject constructor(
         settingsDao.setThemeMode(isDark)
     }
 
+    override suspend fun setThemePalette(palette: String) {
+        settingsDao.insertDefault()
+        settingsDao.setThemePalette(palette)
+    }
+
     override suspend fun setHapticsEnabled(enabled: Boolean) {
         settingsDao.insertDefault()
         settingsDao.setHaptics(enabled)
@@ -56,5 +65,14 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun setSfxEnabled(enabled: Boolean) {
         settingsDao.insertDefault()
         settingsDao.setSfxEnabled(enabled)
+    }
+
+    override fun observeMistakeLimitEnabled(): Flow<Boolean> {
+        return settingsDao.getSettings().map { it?.mistakeLimitEnabled ?: false }
+    }
+
+    override suspend fun setMistakeLimitEnabled(enabled: Boolean) {
+        settingsDao.insertDefault()
+        settingsDao.setMistakeLimitEnabled(enabled)
     }
 }

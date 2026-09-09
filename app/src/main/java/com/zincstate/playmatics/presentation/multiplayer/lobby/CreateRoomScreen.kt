@@ -57,13 +57,7 @@ fun CreateRoomScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
-                    Text(
-                        text = "playmatics.",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
-                        letterSpacing = (-0.5).sp
-                    )
+                    com.zincstate.playmatics.presentation.components.PlaymaticsLogo()
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

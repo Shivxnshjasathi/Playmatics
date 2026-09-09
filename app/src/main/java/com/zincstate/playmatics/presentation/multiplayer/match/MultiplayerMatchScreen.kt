@@ -55,6 +55,7 @@ fun MultiplayerMatchScreen(
     viewModel: MultiplayerMatchViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val mistakeLimitEnabled by viewModel.mistakeLimitEnabled.collectAsState()
 
     LaunchedEffect(matchId) {
         viewModel.initMatch(matchId, seed, difficulty, gameType)
@@ -64,22 +65,11 @@ fun MultiplayerMatchScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        text = "playmatics.",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
-                        letterSpacing = (-0.5).sp
-                    )
+                    com.zincstate.playmatics.presentation.components.PlaymaticsLogo()
                 },
                 navigationIcon = {
                     IconButton(onClick = onHome) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -121,6 +111,15 @@ fun MultiplayerMatchScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    
+                    if (mistakeLimitEnabled) {
+                        Text(
+                            "Mistakes: ${state.mistakesMade}/3",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if (state.mistakesMade >= 2) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         if (!state.isOpponentOnline && state.opponentDisconnectSeconds > 0) {

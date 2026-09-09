@@ -43,6 +43,12 @@ interface MatchRepository {
     /** Complete the match (first to 81 wins). Returns the final Match, or null if someone already won. */
     suspend fun completeMatch(matchId: String): Match?
 
+    /** Send forfeit broadcast. */
+    suspend fun sendForfeitBroadcast()
+
+    /** Observe opponent forfeit broadcasts. */
+    fun observeForfeit(): Flow<String>
+
     /** Forfeit the match (disconnect grace period expired). */
     suspend fun forfeitMatch(matchId: String, forfeitingPlayerId: String): Match?
 

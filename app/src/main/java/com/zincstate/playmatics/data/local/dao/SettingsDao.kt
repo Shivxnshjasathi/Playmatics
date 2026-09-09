@@ -20,6 +20,9 @@ interface SettingsDao {
     @Query("UPDATE settings SET isDarkTheme = :isDark WHERE id = 1")
     suspend fun setThemeMode(isDark: Boolean?): Int
 
+    @Query("UPDATE settings SET themePalette = :palette WHERE id = 1")
+    suspend fun setThemePalette(palette: String): Int
+
     @Query("UPDATE settings SET haptics = :enabled WHERE id = 1")
     suspend fun setHaptics(enabled: Boolean): Int
 
@@ -31,4 +34,7 @@ interface SettingsDao {
 
     @Query("UPDATE settings SET sfxEnabled = :enabled WHERE id = 1")
     suspend fun setSfxEnabled(enabled: Boolean): Int
+
+    @Query("UPDATE settings SET mistakeLimitEnabled = :enabled WHERE id = 1")
+    suspend fun setMistakeLimitEnabled(enabled: Boolean): Int
 }

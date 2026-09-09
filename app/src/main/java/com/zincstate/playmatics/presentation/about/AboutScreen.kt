@@ -65,13 +65,7 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "playmatics.",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = com.zincstate.playmatics.ui.theme.LogoGreen,
-                letterSpacing = (-1.0).sp
-            )
+            com.zincstate.playmatics.presentation.components.PlaymaticsLogo()
 
             Spacer(modifier = Modifier.height(8.dp))
 

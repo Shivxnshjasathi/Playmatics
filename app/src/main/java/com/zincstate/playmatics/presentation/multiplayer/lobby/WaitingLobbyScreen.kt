@@ -96,13 +96,7 @@ fun WaitingLobbyScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
-                    Text(
-                        text = "playmatics.",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = com.zincstate.playmatics.ui.theme.LogoGreen,
-                        letterSpacing = (-0.5).sp
-                    )
+                    com.zincstate.playmatics.presentation.components.PlaymaticsLogo()
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -135,9 +129,10 @@ fun WaitingLobbyScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Card(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(20.dp),
+            elevation = CardDefaults.cardElevation(0.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
+                containerColor = MaterialTheme.colorScheme.surface
             )
         ) {
             Column(

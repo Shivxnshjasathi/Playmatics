@@ -10,20 +10,39 @@ import kotlin.random.Random
 object WordSearchEngine : PuzzleEngine {
     override val gameType = GameType.WORD_SEARCH
 
+    private val WORD_BANK = listOf(
+        "KOTLIN", "ANDROID", "COMPOSE", "PUZZLE", "GAME", "LOGIC", "MOBILE",
+        "STUDIO", "DEVICE", "SCREEN", "BUTTON", "WIDGET", "LAYOUT", "CODE",
+        "BUILD", "GRADLE", "DEBUG", "RELEASE", "TEST", "ERROR", "CRASH",
+        "MEMORY", "THREAD", "FUTURE", "PROMISE", "COROUTINE", "SCOPE", "STATE",
+        "FLOW", "LIVEDATA", "VIEWMODEL", "ACTIVITY", "FRAGMENT", "SERVICE",
+        "INTENT", "BROADCAST", "RECEIVER", "PROVIDER", "DATABASE", "ROOM",
+        "SQLITE", "QUERY", "TABLE", "COLUMN", "ROW", "INDEX", "KEY", "VALUE"
+    )
+
     override fun generate(seed: Long, difficulty: Difficulty): SudokuPuzzle {
         val random = Random(seed)
-        val size = 10
+        
+        val (size, wordCount) = when (difficulty) {
+            Difficulty.EASY -> 8 to 4
+            Difficulty.NORMAL -> 10 to 6
+            Difficulty.HARD -> 12 to 8
+            Difficulty.EXPERT -> 14 to 10
+        }
+        
         val board = Array(size) { IntArray(size) { 0 } }
         val solution = Array(size) { IntArray(size) { 0 } }
         
         // Target words to hide
-        val words = listOf("KOTLIN", "ANDROID", "COMPOSE", "PUZZLE", "GAME")
+        val words = WORD_BANK.shuffled(random).take(wordCount)
         val wordPositions = mutableMapOf<String, Pair<Pair<Int, Int>, Pair<Int, Int>>>()
         
         // Hide words
         for (word in words) {
             var placed = false
-            while (!placed) {
+            var attempts = 0
+            while (!placed && attempts < 100) {
+                attempts++
                 val row = random.nextInt(size)
                 val col = random.nextInt(size)
                 val dr = random.nextInt(3) - 1 // -1, 0, 1

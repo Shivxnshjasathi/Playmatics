@@ -81,6 +81,9 @@ class LobbyViewModel @Inject constructor(
         viewModelScope.launch {
             _createState.update { it.copy(isCreating = true, error = null) }
             try {
+                // Ensure auth is complete before creating the room
+                matchRepository.ensureAuthenticated()
+
                 val difficulty = _createState.value.difficulty
                 val seed = Random.nextLong()
                 val roomCode = generateRoomCode()
@@ -106,27 +109,38 @@ class LobbyViewModel @Inject constructor(
 
     fun startWaitingForOpponent(matchId: String, roomCode: String) {
         viewModelScope.launch {
+            // 1. Start polling DB concurrently so channel join doesn't block it
+            launch {
+                matchRepository.observeMatch(matchId).collect { match ->
+                    if (match.status == MatchStatus.IN_PROGRESS && _waitingState.value.isWaiting) {
+                        startGame(match.id, match.seed, match.difficulty.name, match.gameType)
+                    }
+                }
+            }
+
             try {
+                // 2. Join the realtime channel
                 matchRepository.joinMatchChannel(matchId)
 
-                // Poll for match status change (guest joined)
-                matchRepository.observeMatch(matchId).collect { match ->
-                    if (match.status == MatchStatus.IN_PROGRESS) {
-                        _waitingState.update { it.copy(isWaiting = false) }
-                        _events.emit(
-                            LobbyEvent.MatchStarted(
-                                match.id,
-                                match.seed,
-                                match.difficulty.name,
-                                match.gameType
-                            )
-                        )
+                // 3. Listen for presence as an immediate fallback
+                launch {
+                    matchRepository.observeOpponentPresence().collect { isPresent ->
+                        if (isPresent && _waitingState.value.isWaiting) {
+                            val state = _waitingState.value
+                            startGame(state.matchId, state.seed, state.difficulty.name, state.gameType)
+                        }
                     }
                 }
             } catch (e: Exception) {
-                _events.emit(LobbyEvent.Error(e.toUserFriendlyMessage()))
+                // If channel fails, DB polling continues as fallback
+                android.util.Log.e("LobbyViewModel", "Error joining channel", e)
             }
         }
+    }
+
+    private suspend fun startGame(matchId: String, seed: Long, difficulty: String, gameType: String) {
+        _waitingState.update { it.copy(isWaiting = false) }
+        _events.emit(LobbyEvent.MatchStarted(matchId, seed, difficulty, gameType))
     }
 
     fun cancelRoom() {
@@ -224,8 +238,10 @@ class LobbyViewModel @Inject constructor(
                 "Network Error (Err: CONNECTION_REFUSED): Unable to connect to the server."
             msg.contains("duplicate key value violates unique constraint") -> 
                 "Room code collision (Err: CODE_COLLISION): Please try creating again."
-            else -> 
-                "An unexpected error occurred (Err: UNKNOWN_ERROR). Please try again."
+            else -> {
+                val shortMsg = msg.take(80)
+                "Error: $shortMsg"
+            }
         }
     }
 }

@@ -1,51 +1,53 @@
 package com.zincstate.playmatics.ui.theme
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// ── Logo Colors ─────────────────────────────────────────────────────────
-val LogoCream = Color(0xFFF1E39B)
-val LogoCreamLight = Color(0xFFFDFBF0) // Very light cream for backgrounds
-val LogoGreen = Color(0xFFA2B163)
-val LogoNavy = Color(0xFF434D62)
-val LogoNavyDark = Color(0xFF2C3445) // Darker navy for dark mode backgrounds
+val PureWhite = Color(0xFFFFFFFF)
 
-// ── Brand / Accent ──────────────────────────────────────────────────────
-val AccentBlue = LogoNavy
-val AccentBlueLight = LogoGreen.copy(alpha = 0.3f)
+// ============================================================================
+// SUNSET MINIMALIST
+// ============================================================================
+val SunsetOrange = Color(0xFFFF7E67)
+val SunsetPeach = Color(0xFFFFA27A)
+val SunsetRed = Color(0xFFE05D5D)
+val SunsetGreen = Color(0xFF60A561)
+val SunsetDarkText = Color(0xFF2D2825)
+val SunsetDarkSurface = Color(0xFF3D3733)
+val SunsetBrownMuted = Color(0xFF756A63)
+val SunsetBgLight = Color(0xFFFFFBF7)
+val SunsetSurfaceVarLight = Color(0xFFF6EFE9)
+val SunsetOutlineLight = Color(0xFFE8DFD8)
+val SunsetGridLineLight = Color(0xFFD6C8BC)
+val SunsetSurfaceVarDark = Color(0xFF4A433E)
+val SunsetOutlineDark = Color(0xFF5C544E)
 
-// ── Board cell colors (Semantic) ────────────────────────────────────────
-val CellGivenLight       = LogoNavy
-val CellGivenDark        = LogoCream
-val CellUserCorrect      = LogoGreen
-val CellUserIncorrect    = Color(0xFFEF4444) // Keep standard red for errors
-val CellSelected         = LogoGreen.copy(alpha = 0.4f)
-val CellHighlightSame    = LogoCream
-val CellConflict         = Color(0xFFFEE2E2)
+// Removed Neon and Classic themes
 
-// ── Light theme ─────────────────────────────────────────────────────────
-val LightBackground      = LogoCreamLight
-val LightSurface         = LogoCream
-val LightSurfaceVariant  = LogoCreamLight
-val LightOnBackground    = LogoNavy
-val LightOnSurface       = LogoNavy
-val LightOnSurfaceVar    = LogoNavy.copy(alpha = 0.7f)
-val LightOutline         = LogoNavy.copy(alpha = 0.3f)
-val LightGridLine        = LogoNavy.copy(alpha = 0.5f)
-val LightGridBlock       = LogoNavy
+// ============================================================================
+// DYNAMIC THEME BINDINGS (Legacy Aliases)
+// Maps old hardcoded colors dynamically to MaterialTheme
+// ============================================================================
+val LogoGreen @Composable get() = MaterialTheme.colorScheme.primary
+val LogoNavy @Composable get() = MaterialTheme.colorScheme.surface
+val LogoCream @Composable get() = MaterialTheme.colorScheme.onBackground
+val AccentBlue @Composable get() = MaterialTheme.colorScheme.primary
+val AccentBlueLight @Composable get() = MaterialTheme.colorScheme.primaryContainer
 
-// ── Dark theme ──────────────────────────────────────────────────────────
-val DarkBackground       = LogoNavyDark
-val DarkSurface          = LogoNavy
-val DarkSurfaceVariant   = LogoNavyDark
-val DarkOnBackground     = LogoCreamLight
-val DarkOnSurface        = LogoCreamLight
-val DarkOnSurfaceVar     = LogoCreamLight.copy(alpha = 0.7f)
-val DarkOutline          = LogoCream.copy(alpha = 0.3f)
-val DarkGridLine         = LogoCream.copy(alpha = 0.5f)
-val DarkGridBlock        = LogoCream
+val DeepSpace @Composable get() = MaterialTheme.colorScheme.onBackground
+val SlateSurface @Composable get() = MaterialTheme.colorScheme.surface
+val NeonCyan @Composable get() = MaterialTheme.colorScheme.primary
+val NeonPink @Composable get() = MaterialTheme.colorScheme.error
 
-// ── Progress / Status ───────────────────────────────────────────────────
-val ProgressYou          = LogoGreen
-val ProgressOpponent     = Color(0xFFF59E0B)
-val WinGreen             = LogoGreen
-val LossRed              = Color(0xFFEF4444)
+val CellGivenLight       @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+val CellGivenDark        @Composable get() = MaterialTheme.colorScheme.surface
+val CellUserCorrect      @Composable get() = MaterialTheme.colorScheme.primary
+val CellUserIncorrect    @Composable get() = MaterialTheme.colorScheme.error
+val CellSelected         @Composable get() = MaterialTheme.colorScheme.primaryContainer
+val CellHighlightSame    @Composable get() = MaterialTheme.colorScheme.secondaryContainer
+val CellConflict         @Composable get() = MaterialTheme.colorScheme.errorContainer
+val WinGreen             @Composable get() = MaterialTheme.colorScheme.secondary
+val LossRed              @Composable get() = MaterialTheme.colorScheme.error
+val ProgressYou          @Composable get() = MaterialTheme.colorScheme.primary
+val ProgressOpponent     @Composable get() = MaterialTheme.colorScheme.tertiary

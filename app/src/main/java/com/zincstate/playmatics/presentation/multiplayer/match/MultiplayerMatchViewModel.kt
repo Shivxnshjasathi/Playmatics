@@ -15,8 +15,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,7 +41,8 @@ data class MultiplayerUiState(
     val isOpponentOnline: Boolean = true,
     val opponentDisconnectSeconds: Int = 0,
     val gameType: GameType = GameType.SUDOKU,
-    val variantMetadata: VariantMetadata? = null
+    val variantMetadata: VariantMetadata? = null,
+    val mistakesMade: Int = 0
 ) {
     val yourProgress: Float get() = correctCount / 81f
     val opponentProgress: Float get() = opponentCorrectCount / 81f
@@ -67,19 +70,26 @@ data class MultiplayerUiState(
 class MultiplayerMatchViewModel @Inject constructor(
     private val matchRepository: MatchRepository,
     private val puzzleRepository: PuzzleRepository,
-    private val audioPlayer: com.zincstate.playmatics.presentation.audio.AudioPlayer
+    private val audioPlayer: com.zincstate.playmatics.presentation.audio.AudioPlayer,
+    settingsRepository: com.zincstate.playmatics.domain.repository.SettingsRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MultiplayerUiState())
     val state: StateFlow<MultiplayerUiState> = _state.asStateFlow()
+
+    val mistakeLimitEnabled = settingsRepository.observeMistakeLimitEnabled()
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), false)
 
     private var timerJob: Job? = null
     private var disconnectTimerJob: Job? = null
     private var matchId: String = ""
     private var lastBroadcastedCount = 0
     private var currentEngine = EngineFactory.getEngine(GameType.SUDOKU)
+    private var isInitialized = false
 
     fun initMatch(matchId: String, seed: Long, difficultyName: String, gameTypeName: String = "sudoku") {
+        if (isInitialized) return
+        isInitialized = true
         this.matchId = matchId
         val difficulty = try { Difficulty.valueOf(difficultyName) } catch (_: Exception) { Difficulty.NORMAL }
         val gameType = GameType.fromKey(gameTypeName)
@@ -110,6 +120,9 @@ class MultiplayerMatchViewModel @Inject constructor(
 
             // Start listening for opponent progress
             listenToOpponentProgress()
+
+            // Start listening for opponent forfeit
+            listenToOpponentForfeit()
 
             // Start presence monitoring
             listenToPresence()
@@ -157,6 +170,9 @@ class MultiplayerMatchViewModel @Inject constructor(
             )
             val cellStates = computeCellStates(newBoard, current.givenCells, current.solution)
             val correctCount = currentEngine.countCorrectCells(newBoard, current.solution)
+            val isMistake = digit != current.solution[row][col]
+            val newMistakesMade = if (isMistake) current.mistakesMade + 1 else current.mistakesMade
+            val hasLost = mistakeLimitEnabled.value && newMistakesMade >= 3
 
             _state.update {
                 it.copy(
@@ -164,7 +180,8 @@ class MultiplayerMatchViewModel @Inject constructor(
                     cellStates = cellStates,
                     conflictCells = conflicts,
                     correctCount = correctCount,
-                    pencilNotes = newNotes
+                    pencilNotes = newNotes,
+                    mistakesMade = newMistakesMade
                 )
             }
 
@@ -178,10 +195,13 @@ class MultiplayerMatchViewModel @Inject constructor(
 
             // Check for completion
             val totalCells = current.solution.sumOf { r -> r.count { it != 0 } }
-            if (correctCount == totalCells) {
+            if (hasLost) {
+                onMatchCompleted(lostByMistake = true)
+                audioPlayer.playError()
+            } else if (correctCount == totalCells) {
                 onMatchCompleted()
                 audioPlayer.playWin()
-            } else if (conflicts.isNotEmpty()) {
+            } else if (conflicts.isNotEmpty() || isMistake) {
                 audioPlayer.playError()
             } else {
                 audioPlayer.playClick()
@@ -237,21 +257,29 @@ class MultiplayerMatchViewModel @Inject constructor(
     //  Match completion                                                    //
     // ------------------------------------------------------------------ //
 
-    private fun onMatchCompleted() {
+    private fun onMatchCompleted(lostByMistake: Boolean = false) {
         timerJob?.cancel()
         viewModelScope.launch {
-            val result = matchRepository.completeMatch(matchId)
-            if (result != null && result.winnerId != null) {
+            if (lostByMistake) {
                 val userId = matchRepository.ensureAuthenticated()
-                val won = result.winnerId == userId
-                _state.update {
-                    it.copy(matchResult = if (won) MatchResult.WIN else MatchResult.LOSS)
-                }
-                puzzleRepository.recordMultiplayerResult(won)
-            } else {
-                // Someone else already won
+                matchRepository.sendForfeitBroadcast()
+                matchRepository.forfeitMatch(matchId, userId)
                 _state.update { it.copy(matchResult = MatchResult.LOSS) }
                 puzzleRepository.recordMultiplayerResult(false)
+            } else {
+                val result = matchRepository.completeMatch(matchId)
+                if (result != null && result.winnerId != null) {
+                    val userId = matchRepository.ensureAuthenticated()
+                    val won = result.winnerId == userId
+                    _state.update {
+                        it.copy(matchResult = if (won) MatchResult.WIN else MatchResult.LOSS)
+                    }
+                    puzzleRepository.recordMultiplayerResult(won)
+                } else {
+                    // Someone else already won
+                    _state.update { it.copy(matchResult = MatchResult.LOSS) }
+                    puzzleRepository.recordMultiplayerResult(false)
+                }
             }
         }
     }
@@ -276,6 +304,17 @@ class MultiplayerMatchViewModel @Inject constructor(
                             puzzleRepository.recordMultiplayerResult(false)
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private fun listenToOpponentForfeit() {
+        viewModelScope.launch {
+            matchRepository.observeForfeit().collect { _ ->
+                if (_state.value.matchResult == null) {
+                    _state.update { it.copy(matchResult = MatchResult.WIN) }
+                    puzzleRepository.recordMultiplayerResult(true)
                 }
             }
         }

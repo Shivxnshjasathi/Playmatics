@@ -18,17 +18,10 @@ class AudioPlayer(private val context: Context) {
     private var isMusicEnabled = true
     private var isSfxEnabled = true
 
-    fun init() {
-        // Init MediaPlayer for BGM
-        try {
-            mediaPlayer = MediaPlayer.create(context, R.raw.bgm).apply {
-                isLooping = true
-                setVolume(0.3f, 0.3f)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    private var currentPlaylist = emptyList<Int>()
+    private var currentSongIndex = 0
 
+    fun init() {
         // Init SoundPool for SFX
         val audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
@@ -59,6 +52,32 @@ class AudioPlayer(private val context: Context) {
         }
     }
 
+    private fun playNextSong() {
+        mediaPlayer?.release()
+        
+        if (currentSongIndex >= currentPlaylist.size || currentPlaylist.isEmpty()) {
+            currentPlaylist = listOf(
+                R.raw.notes_on_a_rainy_desk,
+                R.raw.solving_for_peace,
+                R.raw.the_final_row
+            ).shuffled()
+            currentSongIndex = 0
+        }
+        
+        try {
+            mediaPlayer = MediaPlayer.create(context, currentPlaylist[currentSongIndex]).apply {
+                setVolume(0.3f, 0.3f)
+                setOnCompletionListener {
+                    if (isMusicEnabled) playNextSong()
+                }
+                if (isMusicEnabled) start()
+            }
+            currentSongIndex++
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     fun setSfxEnabled(enabled: Boolean) {
         isSfxEnabled = enabled
     }
@@ -84,7 +103,9 @@ class AudioPlayer(private val context: Context) {
     fun resumeMusic() {
         if (isMusicEnabled) {
             try {
-                if (mediaPlayer?.isPlaying == false) {
+                if (mediaPlayer == null) {
+                    playNextSong()
+                } else if (mediaPlayer?.isPlaying == false) {
                     mediaPlayer?.start()
                 }
             } catch (e: Exception) {

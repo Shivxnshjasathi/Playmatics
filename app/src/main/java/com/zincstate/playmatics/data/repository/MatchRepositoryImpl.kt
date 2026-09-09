@@ -26,7 +26,8 @@ class MatchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createRoom(difficulty: Difficulty, seed: Long, roomCode: String, gameType: String): Match {
-        val userId = matchManager.getCurrentUserId()
+        val userId = matchManager.ensureAuthenticated()
+        require(userId.isNotEmpty()) { "Authentication failed — cannot create room." }
         val dto = matchManager.createRoom(
             MatchDto(
                 roomCode = roomCode,
@@ -87,6 +88,19 @@ class MatchRepositoryImpl @Inject constructor(
                     if (progress.playerId != userId) progress
                     else PlayerProgress("", 0)
                 }
+            } ?: emptyFlow()
+    }
+
+    override suspend fun sendForfeitBroadcast() {
+        val userId = matchManager.getCurrentUserId()
+        matchManager.sendForfeitBroadcast(userId)
+    }
+
+    override fun observeForfeit(): Flow<String> {
+        val userId = matchManager.getCurrentUserId()
+        return matchManager.observeForfeit()
+            ?.mapNotNull { event ->
+                if (event.playerId != userId) event.playerId else null
             } ?: emptyFlow()
     }
 

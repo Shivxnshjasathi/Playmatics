@@ -7,23 +7,23 @@ import kotlinx.serialization.Serializable
 object Home
 
 @Serializable
-data class SinglePlayer(val seed: Long, val difficulty: String, val gameType: String = "sudoku")
+data class SinglePlayer(val seed: Long, val difficulty: String, val gameType: String)
 
 @Serializable
-data class CreateRoom(val gameType: String = "sudoku")
+data class CreateRoom(val gameType: String)
 
 @Serializable
 object JoinRoom
 
 @Serializable
-data class WaitingLobby(val matchId: String, val roomCode: String, val gameType: String = "sudoku")
+data class WaitingLobby(val matchId: String, val roomCode: String, val gameType: String)
 
 @Serializable
 data class MultiplayerMatch(
     val matchId: String,
     val seed: Long,
     val difficulty: String,
-    val gameType: String = "sudoku"
+    val gameType: String
 )
 
 @Serializable
