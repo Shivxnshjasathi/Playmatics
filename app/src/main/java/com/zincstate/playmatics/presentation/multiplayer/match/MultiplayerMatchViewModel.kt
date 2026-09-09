@@ -324,6 +324,34 @@ class MultiplayerMatchViewModel @Inject constructor(
         viewModelScope.launch {
             matchRepository.observeOpponentPresence().collect { isPresent ->
                 _state.update { it.copy(isOpponentOnline = isPresent) }
+                
+                if (!isPresent && _state.value.matchResult == null) {
+                    disconnectTimerJob?.cancel()
+                    disconnectTimerJob = launch {
+                        var secondsLeft = 10
+                        while (secondsLeft > 0) {
+                            _state.update { it.copy(opponentDisconnectSeconds = secondsLeft) }
+                            delay(1000)
+                            secondsLeft--
+                        }
+                        // Disconnect timeout reached, current player wins
+                        if (_state.value.matchResult == null) {
+                            _state.update { 
+                                it.copy(
+                                    matchResult = MatchResult.WIN,
+                                    opponentDisconnectSeconds = 0 
+                                ) 
+                            }
+                            puzzleRepository.recordMultiplayerResult(true)
+                            audioPlayer.playWin()
+                            try { matchRepository.completeMatch(matchId) } catch (_: Exception) {}
+                        }
+                    }
+                } else {
+                    // They came back, cancel the disconnect timer
+                    disconnectTimerJob?.cancel()
+                    _state.update { it.copy(opponentDisconnectSeconds = 0) }
+                }
             }
         }
     }

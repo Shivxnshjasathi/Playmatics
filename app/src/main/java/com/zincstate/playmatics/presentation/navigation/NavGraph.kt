@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -25,7 +26,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -186,78 +192,6 @@ fun NavGraph(
             }
         }
 
-        // ── Floating bottom nav bar (visible on Home, Stats, About) ────
-        AnimatedVisibility(
-            visible = showNavBar,
-            enter = slideInVertically(initialOffsetY = { it }),
-            exit = slideOutVertically(targetOffsetY = { it }),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .background(
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                        shape = RoundedCornerShape(32.dp)
-                    )
-                    .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                        RoundedCornerShape(32.dp)
-                    )
-                    .padding(horizontal = 20.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val isHome = currentRoute.contains("Home")
-                val isStats = currentRoute.contains("Stats")
-                val isSettings = currentRoute.contains("Settings")
-                val isAbout = currentRoute.contains("About")
-
-                IconButton(onClick = {
-                    if (!isHome) {
-                        navController.navigate(Home) {
-                            popUpTo<Home> { inclusive = true }
-                        }
-                    }
-                }) {
-                    Icon(
-                        Icons.Filled.Home,
-                        contentDescription = "Home",
-                        tint = if (isHome) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                IconButton(onClick = {
-                    if (!isStats) {
-                        navController.navigate(Stats) {
-                            popUpTo<Home>()
-                        }
-                    }
-                }) {
-                    Icon(
-                        Icons.Filled.Leaderboard,
-                        contentDescription = "Stats",
-                        tint = if (isStats) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                IconButton(onClick = {
-                    if (!isSettings) {
-                        navController.navigate(com.zincstate.playmatics.presentation.navigation.Settings()) {
-                            popUpTo<Home>()
-                        }
-                    }
-                }) {
-                    Icon(
-                        Icons.Filled.Settings,
-                        contentDescription = "Settings",
-                        tint = if (isSettings) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
     }
 }
+

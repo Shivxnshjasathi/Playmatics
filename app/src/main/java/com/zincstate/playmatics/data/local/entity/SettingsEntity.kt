@@ -13,6 +13,6 @@ data class SettingsEntity(
     val haptics: Boolean = true,
     val highlightMistakes: Boolean = true,
     val mistakeLimitEnabled: Boolean = false,
-    val musicEnabled: Boolean = false,
+    val musicEnabled: Boolean = true,
     val sfxEnabled: Boolean = true
 )

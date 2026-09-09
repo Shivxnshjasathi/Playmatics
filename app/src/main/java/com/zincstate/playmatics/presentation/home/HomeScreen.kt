@@ -24,7 +24,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -63,6 +65,8 @@ fun HomeScreen(
 ) {
     val isOnline = connectivityObserver?.isOnline?.collectAsState()?.value ?: false
     var showDifficultyDialog by remember { mutableStateOf(false) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     val difficultyOptions = listOf(Difficulty.EASY, Difficulty.NORMAL, Difficulty.HARD)
     var activeGame by rememberSaveable(stateSaver = androidx.compose.runtime.saveable.Saver(
         save = { it.key },
@@ -70,19 +74,90 @@ fun HomeScreen(
     )) { mutableStateOf(GameType.SUDOKU) }
     val allGames = GameType.entries
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                modifier = Modifier.width(280.dp),
+                drawerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, top = 48.dp, bottom = 24.dp)
+                ) {
                     PlaymaticsLogo()
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Your Puzzle Playground",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        letterSpacing = 0.5.sp
+                    )
+                }
+                
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                 )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+
+                NavigationDrawerItem(
+                    label = { Text("Stats", fontWeight = FontWeight.Medium) },
+                    icon = { Icon(androidx.compose.material.icons.Icons.Filled.Leaderboard, contentDescription = null) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onStats() 
+                    },
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                NavigationDrawerItem(
+                    label = { Text("Settings", fontWeight = FontWeight.Medium) },
+                    icon = { Icon(androidx.compose.material.icons.Icons.Filled.Settings, contentDescription = null) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onSettings(activeGame.key) 
+                    },
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                NavigationDrawerItem(
+                    label = { Text("About", fontWeight = FontWeight.Medium) },
+                    icon = { Icon(androidx.compose.material.icons.Icons.Filled.Info, contentDescription = null) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onAbout() 
+                    },
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        PlaymaticsLogo()
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Filled.Menu,
+                                contentDescription = "Menu"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    )
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -191,6 +266,8 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+    }
+
 
     // ── Difficulty picker dialog ───────────────────────────────────────
     if (showDifficultyDialog) {
@@ -410,13 +487,6 @@ private fun GameModeCard(
                         letterSpacing = 0.5.sp
                     )
                 }
-
-                Icon(
-                    Icons.Filled.PlayArrow,
-                    contentDescription = "Go",
-                    tint = arrowColor.copy(alpha = if (enabled) 1f else 0.3f),
-                    modifier = Modifier.size(32.dp)
-                )
             }
         }
         }
