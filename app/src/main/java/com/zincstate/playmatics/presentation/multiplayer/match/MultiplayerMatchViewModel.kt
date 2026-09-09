@@ -328,7 +328,7 @@ class MultiplayerMatchViewModel @Inject constructor(
                 if (!isPresent && _state.value.matchResult == null) {
                     disconnectTimerJob?.cancel()
                     disconnectTimerJob = launch {
-                        var secondsLeft = 10
+                        var secondsLeft = 60
                         while (secondsLeft > 0) {
                             _state.update { it.copy(opponentDisconnectSeconds = secondsLeft) }
                             delay(1000)

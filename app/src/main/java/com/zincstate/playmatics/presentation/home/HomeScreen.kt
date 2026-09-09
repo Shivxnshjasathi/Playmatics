@@ -1,15 +1,18 @@
 package com.zincstate.playmatics.presentation.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Functions
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Home
@@ -22,9 +25,12 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Abc
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.PersonOutline
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
@@ -36,9 +42,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -74,6 +83,13 @@ fun HomeScreen(
     )) { mutableStateOf(GameType.SUDOKU) }
     val allGames = GameType.entries
 
+    val primaryGradient = Brush.linearGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+        )
+    )
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -103,7 +119,7 @@ fun HomeScreen(
 
                 NavigationDrawerItem(
                     label = { Text("Stats", fontWeight = FontWeight.Medium) },
-                    icon = { Icon(androidx.compose.material.icons.Icons.Filled.Leaderboard, contentDescription = null) },
+                    icon = { Icon(Icons.Filled.Leaderboard, contentDescription = null) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -114,7 +130,7 @@ fun HomeScreen(
                 )
                 NavigationDrawerItem(
                     label = { Text("Settings", fontWeight = FontWeight.Medium) },
-                    icon = { Icon(androidx.compose.material.icons.Icons.Filled.Settings, contentDescription = null) },
+                    icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -125,7 +141,7 @@ fun HomeScreen(
                 )
                 NavigationDrawerItem(
                     label = { Text("About", fontWeight = FontWeight.Medium) },
-                    icon = { Icon(androidx.compose.material.icons.Icons.Filled.Info, contentDescription = null) },
+                    icon = { Icon(Icons.Filled.Info, contentDescription = null) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -144,13 +160,27 @@ fun HomeScreen(
                         PlaymaticsLogo()
                     },
                     navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Filled.Menu,
-                                contentDescription = "Menu"
-                            )
+                        IconButton(
+                            onClick = { scope.launch { drawerState.open() } },
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Menu,
+                                        contentDescription = "Menu",
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
                         }
                     },
+                    actions = {},
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent
                     )
@@ -168,14 +198,27 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // ── GAMES section ──────────────────────────────────────
-            Text(
-                "Games",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.5.sp,
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "GAMES",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    "View All",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -185,28 +228,24 @@ fun HomeScreen(
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 allGames.forEach { game ->
                     GameCategoryChip(
                         game = game,
                         isSelected = activeGame == game,
+                        primaryGradient = primaryGradient,
                         onClick = { activeGame = game }
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // ── Play Offline card ──────────────────────────────────
-            GameModeCard(
-                tag = activeGame.displayName,
-                tagColor = LogoGreen,
-                tagTextColor = Color.Black,
-                title = "Play\nOffline",
-                subtitle = activeGame.description,
-                arrowColor = LogoGreen,
-                enabled = true,
+            PlayOfflineCard(
+                game = activeGame,
+                primaryGradient = primaryGradient,
                 onClick = { showDifficultyDialog = true },
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
@@ -214,25 +253,38 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // ── MULTIPLAYER section ────────────────────────────────
-            Text(
-                "Multiplayer",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.5.sp,
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "MULTIPLAYER",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    "Real-time duels",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Create Room card
-            GameModeCard(
-                tag = "1v1",
-                tagColor = MaterialTheme.colorScheme.primary,
-                tagTextColor = MaterialTheme.colorScheme.onPrimary,
+            MultiplayerCard(
+                tag = "1V1",
                 title = "Create\nRoom",
-                subtitle = "Host a match for a friend",
-                arrowColor = MaterialTheme.colorScheme.primary,
+                subtitle = "Host a private match for a friend or rival",
+                icon = Icons.Filled.PersonAdd,
+                bottomInfo = "5 Min Blitz / Untimed",
+                actionText = "Setup Lobby \u2192",
                 enabled = isOnline,
                 onClick = { onCreateRoom(activeGame.key) },
                 modifier = Modifier.padding(horizontal = 20.dp)
@@ -241,13 +293,13 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Join Room card
-            GameModeCard(
-                tag = "Join",
-                tagColor = MaterialTheme.colorScheme.primary,
-                tagTextColor = MaterialTheme.colorScheme.onPrimary,
+            MultiplayerCard(
+                tag = "JOIN",
                 title = "Join\nRoom",
-                subtitle = "Enter a room code to play",
-                arrowColor = MaterialTheme.colorScheme.primary,
+                subtitle = "Enter a room code to play with a friend",
+                icon = Icons.Filled.PersonOutline,
+                bottomInfo = "Any Mode / Speed",
+                actionText = "Enter Code \u2192",
                 enabled = isOnline,
                 onClick = onJoinRoom,
                 modifier = Modifier.padding(horizontal = 20.dp)
@@ -288,30 +340,48 @@ fun HomeScreen(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
                     Column {
-                        Text(
-                            activeGame.displayName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = LogoGreen,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        // Game name badge
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                        ) {
+                            Text(
+                                activeGame.displayName.uppercase(),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
                         Text(
                             "Select Difficulty",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = (-0.5).sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    IconButton(onClick = { showDifficultyDialog = false }) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = "Close",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        IconButton(onClick = { showDifficultyDialog = false }) {
+                            Icon(
+                                Icons.Filled.Close,
+                                contentDescription = "Close",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
 
@@ -321,7 +391,7 @@ fun HomeScreen(
                 DifficultyOptionCard(
                     label = "Easy",
                     description = "Relaxed pace, more hints",
-                    accentColor = LogoGreen,
+                    accentColor = MaterialTheme.colorScheme.primary,
                     icon = Icons.Filled.SentimentSatisfied,
                     onClick = {
                         showDifficultyDialog = false
@@ -364,27 +434,22 @@ fun HomeScreen(
 private fun GameCategoryChip(
     game: GameType,
     isSelected: Boolean,
+    primaryGradient: Brush,
     onClick: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                if (isSelected) LogoGreen.copy(alpha = 0.12f)
-                else Color.Transparent
-            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 10.dp)
-            .width(60.dp)
+            .width(64.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(56.dp)
+                .size(64.dp)
                 .background(
-                    brush = if (isSelected) Brush.linearGradient(listOf(LogoGreen, LogoGreen.copy(alpha=0.6f)))
-                            else Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surfaceVariant)),
-                    shape = RoundedCornerShape(16.dp)
+                    brush = if (isSelected) primaryGradient
+                    else Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surfaceVariant)),
+                    shape = RoundedCornerShape(20.dp)
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -398,8 +463,8 @@ private fun GameCategoryChip(
             Icon(
                 icon,
                 contentDescription = game.displayName,
-                tint = if (isSelected) Color.Black
-                else MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (isSelected) Color.White
+                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.6f),
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -410,24 +475,126 @@ private fun GameCategoryChip(
             game.displayName,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) LogoGreen
-            else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (isSelected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.8f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            fontSize = 9.sp
+            fontSize = 11.sp
         )
     }
 }
 
-// ── Game Mode Card ─────────────────────────────────────────────────────
+// ── Play Offline Card ──────────────────────────────────────────────────
 @Composable
-private fun GameModeCard(
+private fun PlayOfflineCard(
+    game: GameType,
+    primaryGradient: Brush,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(primaryGradient)
+        ) {
+
+
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                // Pill
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                ) {
+                    Text(
+                        game.displayName.uppercase(),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    "Play\nOffline",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Black,
+                    lineHeight = 36.sp,
+                    letterSpacing = (-0.5).sp,
+                    color = Color.White
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    game.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.8f),
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(MaterialTheme.colorScheme.secondary, CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Casual • Medium • Hard",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
+
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Play",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Multiplayer Card ───────────────────────────────────────────────────
+@Composable
+private fun MultiplayerCard(
     tag: String,
-    tagColor: Color,
-    tagTextColor: Color,
     title: String,
     subtitle: String,
-    arrowColor: Color,
+    icon: ImageVector,
+    bottomInfo: String,
+    actionText: String,
     enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -440,55 +607,98 @@ private fun GameModeCard(
             .clickable(enabled = enabled, onClick = onClick),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.3f))
     ) {
         Box(
-            modifier = Modifier
-                .padding(24.dp)
+            modifier = Modifier.padding(24.dp)
         ) {
             Column {
-            // Tag badge
-            Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = tagColor.copy(alpha = if (enabled) 1f else 0.4f)
-            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    // Tag badge
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    ) {
+                        Text(
+                            tag,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                    
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.background.copy(alpha=0.5f),
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
-                    tag,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = tagTextColor
+                    title,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                    lineHeight = 32.sp,
+                    letterSpacing = (-0.5).sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha)
                 )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha * 0.8f),
+                    letterSpacing = 0.5.sp
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Schedule,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            bottomInfo,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha)
+                        )
+                    }
+                    
                     Text(
-                        title,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Black,
-                        lineHeight = 34.sp,
-                        letterSpacing = (-0.5).sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha)
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = contentAlpha * 0.8f
-                        ),
-                        letterSpacing = 0.5.sp
+                        actionText,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = contentAlpha),
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-        }
         }
     }
 }
@@ -506,11 +716,12 @@ private fun DifficultyOptionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(0.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            containerColor = Color.Transparent
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.2f))
     ) {
         Row(
             modifier = Modifier
@@ -520,45 +731,53 @@ private fun DifficultyOptionCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Accent icon box
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        color = accentColor.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(14.dp)
-                    ),
-                contentAlignment = Alignment.Center
+            Surface(
+                shape = CircleShape,
+                color = accentColor.copy(alpha = 0.15f),
+                modifier = Modifier.size(52.dp)
             ) {
-                Icon(
-                    icon,
-                    contentDescription = label,
-                    tint = accentColor,
-                    modifier = Modifier.size(26.dp)
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        contentDescription = label,
+                        tint = accentColor,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
             }
 
             // Label + description
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     label,
-                    fontSize = 17.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    letterSpacing = 0.5.sp
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )
             }
 
             // Arrow
-            Icon(
-                Icons.Filled.PlayArrow,
-                contentDescription = "Play $label",
-                tint = accentColor,
-                modifier = Modifier.size(24.dp)
-            )
+            Surface(
+                shape = CircleShape,
+                color = accentColor.copy(alpha = 0.1f),
+                modifier = Modifier.size(36.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Filled.PlayArrow,
+                        contentDescription = "Play $label",
+                        tint = accentColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
         }
     }
 }

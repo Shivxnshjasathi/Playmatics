@@ -35,7 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.zincstate.playmatics.presentation.components.DualProgressBar
+
 import com.zincstate.playmatics.presentation.components.MatchResult
 import com.zincstate.playmatics.presentation.components.NumberPad
 import com.zincstate.playmatics.presentation.components.ResultModal
@@ -157,17 +157,7 @@ fun MultiplayerMatchScreen(
                         )
                     }
                 }
-                
-                // Progress bars
-                DualProgressBar(
-                    yourProgress = state.yourProgress,
-                    opponentProgress = state.opponentProgress,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 8.dp)
-                )
 
-                Spacer(modifier = Modifier.height(4.dp))
 
                 GameRenderer(
                     gameType = state.gameType,
