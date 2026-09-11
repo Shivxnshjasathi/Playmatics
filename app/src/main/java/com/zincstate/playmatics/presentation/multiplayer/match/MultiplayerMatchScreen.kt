@@ -55,7 +55,6 @@ fun MultiplayerMatchScreen(
     viewModel: MultiplayerMatchViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val mistakeLimitEnabled by viewModel.mistakeLimitEnabled.collectAsState()
 
     LaunchedEffect(matchId) {
         viewModel.initMatch(matchId, seed, difficulty, gameType)
@@ -117,7 +116,7 @@ fun MultiplayerMatchScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                     
-                    if (mistakeLimitEnabled) {
+                    if (state.mistakeLimitEnabled) {
                         Text(
                             "Mistakes: ${state.mistakesMade}/3",
                             style = MaterialTheme.typography.titleMedium,

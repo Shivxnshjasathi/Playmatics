@@ -24,6 +24,7 @@ import kotlin.random.Random
 
 data class CreateRoomUiState(
     val difficulty: Difficulty = Difficulty.NORMAL,
+    val mistakeLimitEnabled: Boolean = false,
     val isCreating: Boolean = false,
     val error: String? = null
 )
@@ -82,6 +83,10 @@ class LobbyViewModel @Inject constructor(
         _createState.update { it.copy(difficulty = difficulty) }
     }
 
+    fun toggleMistakeLimit(enabled: Boolean) {
+        _createState.update { it.copy(mistakeLimitEnabled = enabled) }
+    }
+
     fun createRoom(gameType: String) {
         viewModelScope.launch {
             _createState.update { it.copy(isCreating = true, error = null) }
@@ -93,14 +98,19 @@ class LobbyViewModel @Inject constructor(
                 val seed = Random.nextLong()
                 val roomCode = generateRoomCode()
 
-                val match = matchRepository.createRoom(difficulty, seed, roomCode, gameType)
+                val match = matchRepository.createRoom(
+                    difficulty, 
+                    seed, 
+                    roomCode, 
+                    if (_createState.value.mistakeLimitEnabled) "$gameType|mistakes" else gameType
+                )
 
                 _waitingState.value = WaitingLobbyUiState(
                     matchId = match.id,
                     roomCode = match.roomCode,
                     difficulty = difficulty,
                     seed = seed,
-                    gameType = gameType
+                    gameType = match.gameType
                 )
 
                 _createState.update { it.copy(isCreating = false) }

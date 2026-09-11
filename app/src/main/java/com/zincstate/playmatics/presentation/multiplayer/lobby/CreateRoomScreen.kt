@@ -90,6 +90,33 @@ fun CreateRoomScreen(
                 onSelect = viewModel::setDifficulty
             )
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        "Mistake Limit",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        "Game ends after 3 mistakes",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                androidx.compose.material3.Switch(
+                    checked = state.mistakeLimitEnabled,
+                    onCheckedChange = viewModel::toggleMistakeLimit
+                )
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
 
             if (state.isCreating) {

@@ -40,7 +40,9 @@ enum class GameType(
 
     companion object {
         /** Look up by Supabase key, falling back to [SUDOKU]. */
-        fun fromKey(key: String): GameType =
-            entries.firstOrNull { it.key == key } ?: SUDOKU
+        fun fromKey(key: String): GameType {
+            val baseKey = key.substringBefore("|")
+            return entries.firstOrNull { it.key == baseKey } ?: SUDOKU
+        }
     }
 }

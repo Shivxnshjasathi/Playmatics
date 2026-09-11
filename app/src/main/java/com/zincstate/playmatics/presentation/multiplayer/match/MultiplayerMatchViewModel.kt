@@ -42,7 +42,8 @@ data class MultiplayerUiState(
     val opponentDisconnectSeconds: Int = 0,
     val gameType: GameType = GameType.SUDOKU,
     val variantMetadata: VariantMetadata? = null,
-    val mistakesMade: Int = 0
+    val mistakesMade: Int = 0,
+    val mistakeLimitEnabled: Boolean = false
 ) {
     val yourProgress: Float get() = correctCount / 81f
     val opponentProgress: Float get() = opponentCorrectCount / 81f
@@ -77,9 +78,6 @@ class MultiplayerMatchViewModel @Inject constructor(
     private val _state = MutableStateFlow(MultiplayerUiState())
     val state: StateFlow<MultiplayerUiState> = _state.asStateFlow()
 
-    val mistakeLimitEnabled = settingsRepository.observeMistakeLimitEnabled()
-        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), false)
-
     private var timerJob: Job? = null
     private var disconnectTimerJob: Job? = null
     private var matchId: String = ""
@@ -112,7 +110,8 @@ class MultiplayerMatchViewModel @Inject constructor(
                 correctCount = correctCount,
                 isLoading = false,
                 gameType = gameType,
-                variantMetadata = puzzle.variantMetadata
+                variantMetadata = puzzle.variantMetadata,
+                mistakeLimitEnabled = gameTypeName.contains("|mistakes")
             )
 
             // Join the realtime channel
@@ -172,7 +171,7 @@ class MultiplayerMatchViewModel @Inject constructor(
             val correctCount = currentEngine.countCorrectCells(newBoard, current.solution)
             val isMistake = digit != current.solution[row][col]
             val newMistakesMade = if (isMistake) current.mistakesMade + 1 else current.mistakesMade
-            val hasLost = mistakeLimitEnabled.value && newMistakesMade >= 3
+            val hasLost = current.mistakeLimitEnabled && newMistakesMade >= 3
 
             _state.update {
                 it.copy(
@@ -260,25 +259,36 @@ class MultiplayerMatchViewModel @Inject constructor(
     private fun onMatchCompleted(lostByMistake: Boolean = false) {
         timerJob?.cancel()
         viewModelScope.launch {
-            if (lostByMistake) {
-                val userId = matchRepository.ensureAuthenticated()
-                matchRepository.sendForfeitBroadcast()
-                matchRepository.forfeitMatch(matchId, userId)
-                _state.update { it.copy(matchResult = MatchResult.LOSS) }
-                puzzleRepository.recordMultiplayerResult(false)
-            } else {
-                val result = matchRepository.completeMatch(matchId)
-                if (result != null && result.winnerId != null) {
+            try {
+                if (lostByMistake) {
+                    _state.update { it.copy(matchResult = MatchResult.LOSS) }
+                    puzzleRepository.recordMultiplayerResult(false)
                     val userId = matchRepository.ensureAuthenticated()
-                    val won = result.winnerId == userId
+                    matchRepository.sendForfeitBroadcast()
+                    matchRepository.forfeitMatch(matchId, userId)
+                } else {
+                    val result = matchRepository.completeMatch(matchId)
+                    if (result != null && result.winnerId != null) {
+                        val userId = matchRepository.ensureAuthenticated()
+                        val won = result.winnerId == userId
+                        _state.update {
+                            it.copy(matchResult = if (won) MatchResult.WIN else MatchResult.LOSS)
+                        }
+                        puzzleRepository.recordMultiplayerResult(won)
+                    } else {
+                        // Someone else already won
+                        _state.update { it.copy(matchResult = MatchResult.LOSS) }
+                        puzzleRepository.recordMultiplayerResult(false)
+                    }
+                }
+            } catch (e: Exception) {
+                // Fallback if network fails so user isn't stuck
+                if (_state.value.matchResult == null) {
+                    val won = !lostByMistake
                     _state.update {
                         it.copy(matchResult = if (won) MatchResult.WIN else MatchResult.LOSS)
                     }
                     puzzleRepository.recordMultiplayerResult(won)
-                } else {
-                    // Someone else already won
-                    _state.update { it.copy(matchResult = MatchResult.LOSS) }
-                    puzzleRepository.recordMultiplayerResult(false)
                 }
             }
         }
